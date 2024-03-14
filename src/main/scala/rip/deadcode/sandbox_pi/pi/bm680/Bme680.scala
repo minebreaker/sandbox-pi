@@ -1,4 +1,4 @@
-package rip.deadcode.sandbox_pi.http.handler.temperature.bm680
+package rip.deadcode.sandbox_pi.pi.bm680
 
 import com.pi4j.context.Context as Pi4JContext
 import com.pi4j.io.i2c.{I2C, I2CProvider}
