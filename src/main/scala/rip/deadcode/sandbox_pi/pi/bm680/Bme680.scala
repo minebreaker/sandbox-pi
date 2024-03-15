@@ -4,23 +4,9 @@ import com.google.inject.{Inject, Singleton}
 import com.pi4j.context.Context as Pi4JContext
 import com.pi4j.io.i2c.{I2C, I2CProvider}
 import org.slf4j.LoggerFactory
-import rip.deadcode.sandbox_pi.utils.show
+import rip.deadcode.sandbox_pi.utils._
 
 import java.nio.ByteBuffer
-
-// The values cast to double must be treated as unsigned
-// The doc doesn't mention which params are signed/unsigned, so you should look at the API implementation to check out the actual types.
-extension (i: Int) {
-  def toUnsignedDouble: Double = java.lang.Integer.toUnsignedLong(i).toDouble
-}
-
-extension (s: Short) {
-  def toUnsignedDouble: Double = java.lang.Short.toUnsignedInt(s).toDouble
-}
-
-extension (b: Byte) {
-  def toUnsignedDouble: Double = java.lang.Byte.toUnsignedInt(b).toDouble
-}
 
 @Singleton
 class Bme680 @Inject() (pi4j: Pi4JContext) {
@@ -46,6 +32,9 @@ class Bme680 @Inject() (pi4j: Pi4JContext) {
     val id = i2c.readRegisterByte(0xD0)
     logger.info(show(id))
 
+    // The values cast to double must be treated as unsigned
+    // The doc doesn't mention which params are signed/unsigned, so you should look at the API implementation to check out the actual types.
+
     // FIXME: bulk write???
     // Ctrl_hum: 0x72, Ctrl_meas: 0x74, Config: 0x75; recommended to write at once
 //    i2c.writeRegister(
@@ -61,39 +50,6 @@ class Bme680 @Inject() (pi4j: Pi4JContext) {
 // TODO set IIR filter
 
     i2c.writeRegister(CtrlHum, 0x1) // Set osrs_h x1
-    // Set gas_wait
-    i2c.writeRegister(0x64, 0x72) // 100ms  // 200ms
-    // Set res_heat_0
-    val resHeat = {
-      val resHeatB = i2c.readRegisterByteBuffer(0x00, 3)
-      val parGB = i2c.readRegisterByteBuffer(0xEB, 4)
-
-      val resHeatVal = resHeatB.get(0).toDouble
-      val resHeatRange = ((resHeatB.get(2) & 0x30) >> 4).toDouble // [5:4]
-      val parG1 = parGB.get(2).toDouble
-      val parG2 = ByteBuffer.allocate(2).put(parGB.get(1)).put(parGB.get(0)).getShort(0).toDouble
-      val parG3 = parGB.get(3).toDouble
-
-      logger.debug("res_heat_val " + resHeatVal)
-      logger.debug("res_heat_range " + resHeatRange)
-      logger.debug(parG1.toString)
-      logger.debug(parG2.toString)
-      logger.debug(parG3.toString)
-
-      val tempAmb = 20 // Should fix to use room temperature
-      val targetTemp = 200
-      val var1 = (parG1 / 16) + 49
-      val var2 = ((parG2 / 32768) * 0.0005) + 0.00235
-      val var3 = parG3 / 1024
-      val var4 = var1 * (1 + (var2 * targetTemp))
-      val var5 = var4 + (var3 * tempAmb)
-      val resHeat = (3.4 * ((var5 * (4 / (4 + resHeatRange)) * (1 / (1 + (resHeatVal * 0.002)))) - 25)).toByte // uint8
-      resHeat
-    }
-    i2c.writeRegister(0x5A, resHeat)
-    // Set nb_conv, run_gas_l
-    // nb_conv = 0
-    i2c.writeRegister(CtrlGas1, 0x0 | 0x1 << 4)
     i2c.writeRegister(CtrlMeas, (0x1 << 5) | (0x1 << 2) | 0x1) // Set osrs_t x1, osrs_p x1, force mode
 
     logger.info("Ctrl" + show(i2c.readRegisterByteBuffer(CtrlGas1, 4).array()))
@@ -224,38 +180,8 @@ class Bme680 @Inject() (pi4j: Pi4JContext) {
       humComp
     }
 
-    val gasRes = {
-      val gasB = i2c.readRegisterByteBuffer(0x2A, 2)
-      val rangeSwitchingErrorB = i2c.readRegisterByteBuffer(0x04, 1)
-      val gasAdc = (java.lang.Short.toUnsignedInt(gasB.getShort(0)) >> 6).toDouble
-      val gasRange = gasB.get(1) & 0x0F
-      val rangeSwitchingError = (rangeSwitchingErrorB.get(0).toInt & 0xFF)
-      val gasValid = (gasB.get(1) >> 5) & 0x1
-      val heatStab = (gasB.get(1) >> 4) & 0x1
-
-      logger.debug("gas_adc" + show(gasB.array()))
-      logger.debug(show(rangeSwitchingErrorB.array()))
-      logger.debug(gasAdc.toString)
-      logger.debug(gasRange.toString)
-      logger.debug(rangeSwitchingError.toString)
-      logger.debug(gasValid.toString)
-      logger.debug(heatStab.toString)
-
-      val ConstArray1 = Array[Double](1, 1, 1, 1, 1, 0.99, 1, 0.992, 1, 1, 0.998, 0.995, 1, 0.99, 1, 1)
-      val ConstArray2 = Array[Double](
-        8000000, 4000000, 2000000, 1000000, 499500.4995, 248262.1648, 125000, 63004.03226, 31281.28128, 15625, 7812.5,
-        3906.25, 1953.125, 976.5625, 488.28125, 244.140625
-      )
-
-      val var1 = (1340 + 5 * rangeSwitchingError) * ConstArray1(gasRange)
-      val gasRes = var1 * ConstArray2(gasRange) / (gasAdc - 512 + var1)
-
-      gasRes
-    }
-
     logger.info("Temp(C):   {}", String.format("%.8f", tempComp))
     logger.info("Press(Pa): {}", String.format("%.8f", pressComp))
     logger.info("Hum(%):    {}", String.format("%.8f", humComp))
-    logger.info("Gas(Ohms): {}", String.format("%.8f", gasRes))
   }
 }
