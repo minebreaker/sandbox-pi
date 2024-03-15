@@ -2,16 +2,24 @@ package rip.deadcode.sandbox_pi.service
 
 import com.google.common.util.concurrent.MoreExecutors
 import com.google.inject.{Inject, Singleton}
+import org.slf4j.LoggerFactory
+import rip.deadcode.sandbox_pi.pi.bm680.Bme680
+import rip.deadcode.sandbox_pi.pi.mhz19c.Mhz19c
 
 import java.util.concurrent.{ScheduledExecutorService, ScheduledThreadPoolExecutor, TimeUnit}
 
 @Singleton
-class Service @Inject() () {
+class Service @Inject() (
+    bme680: Bme680,
+    mhz19c: Mhz19c
+) {
 
   import scala.concurrent.duration.*
   import scala.jdk.DurationConverters.*
 
-  private val PoolSize = 4
+  private val logger = LoggerFactory.getLogger(classOf[Service])
+
+  private val PoolSize = 1
   private val Timeout = 10.seconds.toJava
   private val Period = 60.seconds.toJava
 
@@ -25,6 +33,15 @@ class Service @Inject() () {
   }
 
   private class Runner extends Runnable {
-    override def run(): Unit = {}
+    override def run(): Unit = {
+      try {
+        for {
+          _ <- bme680.refresh()
+          _ <- mhz19c.refresh()
+        } yield ()
+      } catch {
+        case e: Throwable => logger.warn("Unhandled exception at the daemon thread", e)
+      }
+    }
   }
 }

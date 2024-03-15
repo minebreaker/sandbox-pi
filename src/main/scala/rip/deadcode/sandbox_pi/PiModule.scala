@@ -4,6 +4,8 @@ import com.google.inject.{Binder, Module}
 import com.pi4j.context.Context as Pi4JContext
 import com.squareup.moshi.Moshi
 
+import java.time.{Clock, ZoneId}
+
 class PiModule(
     config: Config,
     pi4j: Pi4JContext,
@@ -14,5 +16,6 @@ class PiModule(
     binder.bind(classOf[Config]).toInstance(config)
     binder.bind(classOf[Pi4JContext]).toInstance(pi4j)
     binder.bind(classOf[Moshi]).toInstance(moshi)
+    binder.bind(classOf[Clock]).toInstance(Clock.systemDefaultZone())
   }
 }

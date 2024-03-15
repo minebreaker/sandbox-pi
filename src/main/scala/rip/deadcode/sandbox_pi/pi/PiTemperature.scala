@@ -1,7 +1,8 @@
-package rip.deadcode.sandbox_pi.http.handler.pi_temperature
+package rip.deadcode.sandbox_pi.pi
 
 import cats.effect.{IO, Resource}
 import org.slf4j.LoggerFactory
+import rip.deadcode.sandbox_pi.http.handler.pi_temperature.PiTemperatureOutput
 
 import java.io.IOException
 import java.nio.charset.StandardCharsets

@@ -4,13 +4,14 @@ import com.google.inject.{Inject, Singleton}
 import com.pi4j.context.Context as Pi4JContext
 import com.pi4j.io.serial.{Baud, Serial, SerialProvider}
 import org.slf4j.LoggerFactory
-import rip.deadcode.sandbox_pi.utils.show
+import rip.deadcode.sandbox_pi.utils.*
 
 import java.nio.ByteBuffer
-import scala.util.Using
+import java.time.Clock
+import scala.util.{Failure, Success, Try, Using}
 
 @Singleton
-class Mhz19c @Inject() (pi4j: Pi4JContext) {
+class Mhz19c @Inject() (pi4j: Pi4JContext, clock: Clock) {
 
   private val logger = LoggerFactory.getLogger(classOf[Mhz19c])
 
@@ -27,17 +28,36 @@ class Mhz19c @Inject() (pi4j: Pi4JContext) {
 
   private val serial = provider.create(config)
 
-  def run(): Unit = {
+  @volatile
+  private var result: Option[Mhz19cOutput] = None
+
+  def getData: Mhz19cOutput = {
+    result.getOrElse(throw new RuntimeException("Not initialized yet."))
+  }
+
+  def refresh(): Try[Mhz19cOutput] = {
+    Try {
+      val co2 = serial.synchronized {
+        readData()
+      }
+      val output = Mhz19cOutput(co2, clock.instant())
+      result = Some(output)
+      output
+    }
+  }
+
+  private def readData(): Int = {
 
     logger.debug("Tries to open serial connection.")
 
-    Using(serial) { serial =>
+    Using.resource(serial) { serial =>
       serial.open()
       while (!serial.isOpen) {
         Thread.sleep(100)
         logger.debug("Not open yet.")
       }
 
+      // Read command
       serial.write(
         Array[Byte](
           0xFF.toByte,
@@ -71,15 +91,17 @@ class Mhz19c @Inject() (pi4j: Pi4JContext) {
 
       logger.debug(show(result.array()))
 
-      val higher = result.get(2) & 0xFF
-      val lower = result.get(3) & 0xFF
+      val higher = result.get(2).toUnsigned
+      val lower = result.get(3).toUnsigned
 
-      val receivedChecksum = result.get(8) & 0xFF
-      val calculatedChecksum = (0xFF - result.array().slice(1, 8).map(_ & 0xFF).sum + 1) & 0xFF
+      val receivedChecksum = result.get(8).toUnsigned
+      val calculatedChecksum = (0xFF - result.array().slice(1, 8).map(_.toUnsigned).sum + 1).toByte.toUnsigned
 
       val concentration = higher * 256 + lower
       logger.info("CO2(ppm): {}", concentration)
       logger.info("Checksum received: {}, calculated: {}", receivedChecksum, calculatedChecksum)
+
+      concentration
     }
   }
 }

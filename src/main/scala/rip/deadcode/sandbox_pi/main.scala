@@ -15,10 +15,12 @@ import rip.deadcode.sandbox_pi.http.HttpResponse.JsonHttpResponse
 import rip.deadcode.sandbox_pi.http.handler.helloworld.HelloWorldHandler
 import rip.deadcode.sandbox_pi.http.handler.led.LedHandler
 import rip.deadcode.sandbox_pi.http.handler.pi_temperature.PiTemperatureHandler
-import rip.deadcode.sandbox_pi.http.handler.temperature.TemperatureHandler
-import rip.deadcode.sandbox_pi.http.{HttpHandler, NotFoundHandler}
+import rip.deadcode.sandbox_pi.http.handler.environment.EnvironmentHandler
+import rip.deadcode.sandbox_pi.http.{Handlers, HttpHandler, NotFoundHandler}
 import rip.deadcode.sandbox_pi.json.{JsonEncode, ScalaAdapter}
+import rip.deadcode.sandbox_pi.service.Service
 
+import java.time.{ZoneId, ZoneOffset}
 import javax.sql.DataSource
 import scala.util.chaining.scalaUtilChainingOps
 
@@ -63,6 +65,10 @@ def runServer(): Unit = {
     )
   )
 
+  // Start a daemon thread
+  val service = guice.getInstance(classOf[Service])
+  service.start()
+
   val threadPool = QueuedThreadPool()
     .tap(_.setName("server"))
   val server = Server(threadPool)
@@ -70,7 +76,7 @@ def runServer(): Unit = {
     .tap(_.setPort(config.port))
   server.addConnector(connector)
 
-  val handlers = createHandlers(guice)
+  val handlers = guice.getInstance(classOf[Handlers]).handlers
   val notFoundHandler = NotFoundHandler()
 
   server.setHandler(new AbstractHandler {
@@ -102,7 +108,7 @@ def runServer(): Unit = {
       }
       result match {
         case e @ JsonHttpResponse(_, body, _) =>
-          logger.debug(s"Response: JSON")
+          logger.debug(s"Response: JSON\n{}", body)
           response.setContentType(MediaType.JSON_UTF_8.toString)
           response.getWriter.print(e.encode())
       }
@@ -111,11 +117,6 @@ def runServer(): Unit = {
   })
   server.start()
 }
-
-private def createHandlers(injector: Injector) = Seq(
-  injector.getInstance(classOf[HelloWorldHandler]),
-  injector.getInstance(classOf[LedHandler])
-)
 
 case class ErrorResponse(message: String)
 given (using moshi: Moshi): JsonEncode[ErrorResponse] with {
