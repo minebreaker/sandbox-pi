@@ -8,6 +8,7 @@ lazy val root = (project in file("."))
       // Core
       "org.eclipse.jetty" % "jetty-server" % "11.0.14",
       "com.google.guava" % "guava" % "33.0.0-jre",
+      "com.google.inject" % "guice" % "7.0.0",
       "com.pi4j" % "pi4j-plugin-raspberrypi" % "2.4.0",
       "com.pi4j" % "pi4j-plugin-pigpio" % "2.4.0",
 //      "com.pi4j" % "pi4j-plugin-linuxfs" % "2.4.0",

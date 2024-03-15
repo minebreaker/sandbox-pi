@@ -1,5 +1,6 @@
 package rip.deadcode.sandbox_pi.pi.bm680
 
+import com.google.inject.{Inject, Singleton}
 import com.pi4j.context.Context as Pi4JContext
 import com.pi4j.io.i2c.{I2C, I2CProvider}
 import org.slf4j.LoggerFactory
@@ -21,7 +22,8 @@ extension (b: Byte) {
   def toUnsignedDouble: Double = java.lang.Byte.toUnsignedInt(b).toDouble
 }
 
-class Bme680(pi4j: Pi4JContext) {
+@Singleton
+class Bme680 @Inject() (pi4j: Pi4JContext) {
 
   private val logger = LoggerFactory.getLogger(classOf[Bme680])
 

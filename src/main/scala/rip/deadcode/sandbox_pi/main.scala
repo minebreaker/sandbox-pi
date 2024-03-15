@@ -3,6 +3,7 @@ package rip.deadcode.sandbox_pi
 import cats.effect.unsafe.IORuntime
 import ch.qos.logback.classic.encoder.JsonEncoder
 import com.google.common.net.MediaType
+import com.google.inject.{Guice, Injector, Stage}
 import com.pi4j.Pi4J
 import com.squareup.moshi.Moshi
 import jakarta.servlet.http.{HttpServletRequest, HttpServletResponse}
@@ -47,9 +48,19 @@ def runServer(): Unit = {
     .add(ScalaAdapter())
     .build()
 
-  val appCtx = AppContextImpl(
-    config,
-    pi4j
+  val stage = if (config.injector == "development") {
+    Stage.DEVELOPMENT
+  } else {
+    Stage.PRODUCTION
+  }
+
+  val guice = Guice.createInjector(
+    stage,
+    new PiModule(
+      config,
+      pi4j,
+      moshi
+    )
   )
 
   val threadPool = QueuedThreadPool()
@@ -59,7 +70,7 @@ def runServer(): Unit = {
     .tap(_.setPort(config.port))
   server.addConnector(connector)
 
-  val handlers = createHandlers(appCtx)
+  val handlers = createHandlers(guice)
   val notFoundHandler = NotFoundHandler()
 
   server.setHandler(new AbstractHandler {
@@ -78,7 +89,7 @@ def runServer(): Unit = {
         .getOrElse(notFoundHandler)
       val result =
         try {
-          targetHandler.handle(baseRequest, appCtx).handleError(handlerUnexpected).unsafeRunSync()
+          targetHandler.handle(baseRequest).handleError(handlerUnexpected).unsafeRunSync()
         } catch {
           case e: Exception =>
             logger.info("Error outside the IO")
@@ -101,11 +112,9 @@ def runServer(): Unit = {
   server.start()
 }
 
-private def createHandlers(appCtx: AppContext)(using moshi: Moshi) = Seq(
-  HelloWorldHandler(),
-  PiTemperatureHandler(),
-  LedHandler(appCtx),
-  TemperatureHandler(appCtx)
+private def createHandlers(injector: Injector) = Seq(
+  injector.getInstance(classOf[HelloWorldHandler]),
+  injector.getInstance(classOf[LedHandler])
 )
 
 case class ErrorResponse(message: String)
