@@ -36,8 +36,9 @@ class Service @Inject() (
     override def run(): Unit = {
       try {
         for {
-          _ <- bme680.refresh()
-          _ <- mhz19c.refresh()
+          tph <- bme680.refresh()
+          co2 <- mhz19c.refresh()
+          
         } yield ()
       } catch {
         case e: Throwable => logger.warn("Unhandled exception at the daemon thread", e)

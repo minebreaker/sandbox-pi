@@ -8,6 +8,7 @@ import rip.deadcode.sandbox_pi.http.HttpResponse.JsonHttpResponse
 import rip.deadcode.sandbox_pi.http.{HttpHandler, HttpResponse}
 import rip.deadcode.sandbox_pi.pi.bm680.{Bme680, Bme680Output}
 import rip.deadcode.sandbox_pi.pi.mhz19c.{Mhz19c, Mhz19cOutput}
+import rip.deadcode.sandbox_pi.utils.{formatCo2, formatHumidity, formatPressure, formatTemperature}
 
 import java.time.format.DateTimeFormatter
 import java.time.{Clock, ZoneId, ZonedDateTime}
@@ -33,16 +34,16 @@ class EnvironmentHandler @Inject() (
       JsonHttpResponse(
         200,
         EnvironmentOutput(
-          temperature = String.format("%.1f ℃", temp),
+          temperature = formatTemperature(temp),
           temperatureRaw = temp,
           temperatureLastUpdate = timestampStr,
-          pressure = String.format("%f ㍱", press / 100),
+          pressure = formatPressure(press),
           pressureRaw = press,
           pressureLastUpdate = timestampStr,
-          humidity = String.format("%.1f %%", hum),
+          humidity = formatHumidity(hum),
           humidityRaw = hum,
           humidityLastUpdate = timestampStr,
-          co2 = s"$co2 ㏙",
+          co2 = formatCo2(co2),
           co2raw = co2,
           co2LastUpdate = DateTimeFormatter.ISO_DATE_TIME.format(ZonedDateTime.ofInstant(co2Timestamp, clock.getZone))
         )

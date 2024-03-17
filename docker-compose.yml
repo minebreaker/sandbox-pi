@@ -1,0 +1,13 @@
+# This docker compose file is for development rather than deployment.
+# To deploy this app, see README.md#Usage
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: changeme
+      POSTGRES_DB: sandbox-pi
+    ports:
+      #      - "8180:5432"
+      - 5432:5432

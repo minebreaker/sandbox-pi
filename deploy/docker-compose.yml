@@ -1,0 +1,22 @@
+services:
+  sandbox-pi-server:
+    image: sandbox-pi:0.1.0-SNAPSHOT
+    #    restart: unless-stopped
+    restart: "no"
+    environment:
+      SNADBOX_PI_DATABASE_HOST: "sandbox-pi-db"
+      SNADBOX_PI_DATABASE_PORT: "5432"
+    ports:
+      - "8080:8080"  # host:container
+    logging:
+      driver: local
+  sandbox-pi-db:
+    image: postgres:16
+    restart: unless-stopped
+    volumes:
+      - data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: changeme
+      POSTGRES_DB: sandbox-pi
+    logging:
+      driver: local

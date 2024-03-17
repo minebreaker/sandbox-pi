@@ -11,6 +11,7 @@ import org.eclipse.jetty.server.handler.AbstractHandler
 import org.eclipse.jetty.server.{Request, Server, ServerConnector}
 import org.eclipse.jetty.util.thread.QueuedThreadPool
 import org.slf4j.LoggerFactory
+import rip.deadcode.sandbox_pi.db.{createDataSource, createJdbi, setupFlyway}
 import rip.deadcode.sandbox_pi.http.HttpResponse.JsonHttpResponse
 import rip.deadcode.sandbox_pi.http.handler.helloworld.HelloWorldHandler
 import rip.deadcode.sandbox_pi.http.handler.led.LedHandler
@@ -45,6 +46,10 @@ def runServer(): Unit = {
   val pi4j = Pi4J.newAutoContext()
   // Pi4J object seems like automatically shut down, so we don't need to manually call shutdown()
 
+  val dataSource = createDataSource(config.database)
+  setupFlyway(dataSource, config.database)
+  val jdbi = createJdbi(dataSource)
+
   implicit val moshi: Moshi = Moshi
     .Builder()
     .add(ScalaAdapter())
@@ -61,7 +66,8 @@ def runServer(): Unit = {
     new PiModule(
       config,
       pi4j,
-      moshi
+      moshi,
+      jdbi
     )
   )
 
