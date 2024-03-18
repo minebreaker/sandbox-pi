@@ -3,7 +3,9 @@ package rip.deadcode.sandbox_pi.http.handler.history
 import com.google.inject.{Inject, Singleton}
 import org.jdbi.v3.core.Jdbi
 import rip.deadcode.sandbox_pi.db.model.{DayValue, MonthValue, Values}
+import rip.deadcode.sandbox_pi.http.handler.history.HistoryOutput.HistoryValue
 import rip.deadcode.sandbox_pi.utils.{formatCo2, formatHumidity, formatPressure, formatTemperature}
+
 import scala.jdk.OptionConverters.*
 
 @Singleton

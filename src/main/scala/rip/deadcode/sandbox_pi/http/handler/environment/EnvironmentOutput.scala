@@ -1,7 +1,7 @@
 package rip.deadcode.sandbox_pi.http.handler.environment
 
-import com.squareup.moshi.Moshi
-import rip.deadcode.sandbox_pi.json.JsonEncode
+import io.circe.Encoder
+import io.circe.generic.semiauto.deriveEncoder
 
 case class EnvironmentOutput(
     temperature: String,
@@ -19,9 +19,5 @@ case class EnvironmentOutput(
 )
 
 object EnvironmentOutput {
-  given (using moshi: Moshi): JsonEncode[EnvironmentOutput] with {
-    extension (self: EnvironmentOutput) {
-      override def encode(): String = moshi.adapter(classOf[EnvironmentOutput]).toJson(self)
-    }
-  }
+  implicit val encoder: Encoder[EnvironmentOutput] = deriveEncoder
 }

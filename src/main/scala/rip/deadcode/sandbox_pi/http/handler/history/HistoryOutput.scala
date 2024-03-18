@@ -1,7 +1,8 @@
 package rip.deadcode.sandbox_pi.http.handler.history
 
-import com.squareup.moshi.Moshi
-import rip.deadcode.sandbox_pi.json.JsonEncode
+import io.circe.Encoder
+import io.circe.generic.semiauto.deriveEncoder
+import rip.deadcode.sandbox_pi.http.handler.history.HistoryOutput.HistoryValue
 
 case class HistoryOutput(
     temperature: Option[HistoryValue],
@@ -11,20 +12,17 @@ case class HistoryOutput(
 )
 
 object HistoryOutput {
-  given (using moshi: Moshi): JsonEncode[HistoryOutput] with {
-    extension (self: HistoryOutput) {
-      override def encode(): String = moshi.adapter(classOf[HistoryOutput]).toJson(self)
-    }
-  }
-}
+  implicit val encoder: Encoder[HistoryOutput] = deriveEncoder
+  implicit val encoderHistoryValue: Encoder[HistoryValue] = deriveEncoder
 
-case class HistoryValue(
-    average: String,
-    averageRaw: Double,
-    median: String,
-    medianRaw: Double,
-    max: String,
-    maxRaw: Double,
-    min: String,
-    minRaw: Double
-)
+  case class HistoryValue(
+      average: String,
+      averageRaw: Double,
+      median: String,
+      medianRaw: Double,
+      max: String,
+      maxRaw: Double,
+      min: String,
+      minRaw: Double
+  )
+}

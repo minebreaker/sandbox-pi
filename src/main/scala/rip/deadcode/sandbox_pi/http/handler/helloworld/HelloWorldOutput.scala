@@ -1,16 +1,12 @@
 package rip.deadcode.sandbox_pi.http.handler.helloworld
 
-import com.squareup.moshi.Moshi
-import rip.deadcode.sandbox_pi.json.JsonEncode
+import io.circe.Encoder
+import io.circe.generic.semiauto.deriveEncoder
 
 case class HelloWorldOutput(
     status: String
 )
 
 object HelloWorldOutput {
-  given (using moshi: Moshi): JsonEncode[HelloWorldOutput] with {
-    extension (self: HelloWorldOutput) {
-      override def encode(): String = moshi.adapter(classOf[HelloWorldOutput]).toJson(self)
-    }
-  }
+  implicit val encoder: Encoder[HelloWorldOutput] = deriveEncoder
 }

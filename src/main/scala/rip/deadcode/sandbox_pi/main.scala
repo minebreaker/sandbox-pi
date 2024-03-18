@@ -5,7 +5,7 @@ import ch.qos.logback.classic.encoder.JsonEncoder
 import com.google.common.net.MediaType
 import com.google.inject.{Guice, Injector, Stage}
 import com.pi4j.Pi4J
-import com.squareup.moshi.Moshi
+import io.circe.Encoder
 import jakarta.servlet.http.{HttpServletRequest, HttpServletResponse}
 import org.eclipse.jetty.server.handler.AbstractHandler
 import org.eclipse.jetty.server.{Request, Server, ServerConnector}
@@ -18,7 +18,6 @@ import rip.deadcode.sandbox_pi.http.handler.led.LedHandler
 import rip.deadcode.sandbox_pi.http.handler.pi_temperature.PiTemperatureHandler
 import rip.deadcode.sandbox_pi.http.handler.environment.EnvironmentHandler
 import rip.deadcode.sandbox_pi.http.{Handlers, HttpHandler, NotFoundHandler}
-import rip.deadcode.sandbox_pi.json.{JsonEncode, ScalaAdapter}
 import rip.deadcode.sandbox_pi.service.Service
 
 import java.time.{ZoneId, ZoneOffset}
@@ -50,11 +49,6 @@ def runServer(): Unit = {
   setupFlyway(dataSource, config.database)
   val jdbi = createJdbi(dataSource)
 
-  implicit val moshi: Moshi = Moshi
-    .Builder()
-    .add(ScalaAdapter())
-    .build()
-
   val stage = if (config.injector == "development") {
     Stage.DEVELOPMENT
   } else {
@@ -66,7 +60,6 @@ def runServer(): Unit = {
     new PiModule(
       config,
       pi4j,
-      moshi,
       jdbi
     )
   )
@@ -116,7 +109,8 @@ def runServer(): Unit = {
         case e @ JsonHttpResponse(_, body, _) =>
           logger.debug(s"Response: JSON\n{}", body)
           response.setContentType(MediaType.JSON_UTF_8.toString)
-          response.getWriter.print(e.encode())
+          import io.circe.syntax._
+          response.getWriter.print(e.encode)
       }
       baseRequest.setHandled(true)
     }
@@ -125,12 +119,13 @@ def runServer(): Unit = {
 }
 
 case class ErrorResponse(message: String)
-given (using moshi: Moshi): JsonEncode[ErrorResponse] with {
-  extension (self: ErrorResponse) override def encode(): String = moshi.adapter(classOf[ErrorResponse]).toJson(self)
+
+object ErrorResponse {
+  import io.circe.generic.semiauto._
+  implicit val encoder: Encoder[ErrorResponse] = deriveEncoder
 }
 
-private def handlerUnexpected(e: Throwable)(using moshi: Moshi) = {
-
+private def handlerUnexpected(e: Throwable) = {
   logger.warn("Unhandled exception", e)
   JsonHttpResponse(
     status = 500,

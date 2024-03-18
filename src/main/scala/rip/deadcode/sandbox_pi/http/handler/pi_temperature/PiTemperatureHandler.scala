@@ -2,7 +2,6 @@ package rip.deadcode.sandbox_pi.http.handler.pi_temperature
 
 import cats.effect.IO
 import com.google.inject.{Inject, Singleton}
-import com.squareup.moshi.Moshi
 import org.eclipse.jetty.server.Request
 import rip.deadcode.sandbox_pi.http.{HttpHandler, HttpResponse}
 import rip.deadcode.sandbox_pi.pi.PiTemperature
@@ -10,7 +9,7 @@ import rip.deadcode.sandbox_pi.pi.PiTemperature
 import scala.util.matching.compat.Regex
 
 @Singleton
-class PiTemperatureHandler @Inject() ()(using moshi: Moshi) extends HttpHandler {
+class PiTemperatureHandler @Inject() () extends HttpHandler {
 
   override def url: Regex = "^/pi_temp$".r
 

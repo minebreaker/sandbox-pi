@@ -1,9 +1,8 @@
 package rip.deadcode.sandbox_pi.http.handler.history
 
-import cats.data.{Validated, ValidatedNec, ValidatedNel}
+import cats.data.{Validated, ValidatedNel}
 import cats.effect.IO
 import com.google.inject.{Inject, Singleton}
-import com.squareup.moshi.Moshi
 import org.eclipse.jetty.server.Request
 import rip.deadcode.sandbox_pi.http.HttpResponse.JsonHttpResponse
 import rip.deadcode.sandbox_pi.http.handler.history.HistoryException.InvalidParameter
@@ -12,7 +11,7 @@ import rip.deadcode.sandbox_pi.http.{HttpHandler, HttpResponse}
 import scala.util.matching.compat.Regex
 
 @Singleton
-class HistoryHandler @Inject() (reader: Reader)(using moshi: Moshi) extends HttpHandler {
+class HistoryHandler @Inject() (reader: Reader) extends HttpHandler {
 
   override def url: Regex = "^/history(\\?.+)?".r
 

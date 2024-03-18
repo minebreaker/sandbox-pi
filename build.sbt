@@ -15,9 +15,10 @@ lazy val root = (project in file("."))
       "com.pi4j" % "pi4j-plugin-raspberrypi" % "2.4.0",
       "com.pi4j" % "pi4j-plugin-pigpio" % "2.4.0",
 //      "com.pi4j" % "pi4j-plugin-linuxfs" % "2.4.0",
-      "com.squareup.moshi" % "moshi" % "1.15.0",
       "com.typesafe" % "config" % "1.4.3",
       "ch.qos.logback" % "logback-classic" % "1.4.14",
+      "io.circe" %% "circe-core" % "0.15.0-M1",
+      "io.circe" %% "circe-generic" % "0.15.0-M1",
       // Database
       "org.jdbi" % "jdbi3-core" % "3.43.0",
       "org.postgresql" % "postgresql" % "42.7.3",
