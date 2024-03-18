@@ -12,7 +12,7 @@ import java.util.Optional
 class ConstructorRowMapperFactoryDelegator extends RowMapperFactory {
   override def build(t: Type, config: ConfigRegistry): Optional[RowMapper[?]] = {
     t match {
-      case _ if !t.getTypeName.startsWith("rip.deadcode.ssch") =>
+      case _ if !t.getTypeName.startsWith("rip.deadcode.sandbox_pi") =>
         Optional.empty()
       case clz: Class[_] =>
         Optional.of(

@@ -15,7 +15,7 @@ private[history] class Reader @Inject() (jdbi: Jdbi) {
         handle
           // language=SQL
           .createQuery(
-            s"""select average, median, max_value, min_value, year, month
+            s"""select average, median, max, min, year, month
                  |from $table
                  |where year = :year and month = :month
                  |""".stripMargin
@@ -41,7 +41,7 @@ private[history] class Reader @Inject() (jdbi: Jdbi) {
         handle
           // language=SQL
           .createQuery(
-            s"""select average, median, max_value, min_value, year, month, day
+            s"""select average, median, max, min, year, month, day
                |from $table
                |where year = :year and month = :month and day = :day
                |""".stripMargin
@@ -68,7 +68,7 @@ private[history] class Reader @Inject() (jdbi: Jdbi) {
         handle
           // language=SQL
           .createQuery(
-            s"""select average, median, max_value, min_value, year, month, day, hour
+            s"""select average, median, max, min, year, month, day, hour
                |from $table
                |where year = :year and month = :month and day = :day and hour = :hour
                |""".stripMargin

@@ -22,7 +22,7 @@ class Service @Inject() (
 
   private val PoolSize = 1
   private val Timeout = 10.seconds.toJava
-  private val Period = 60.seconds.toJava
+  private val Period = 30.seconds.toJava
 
   private val executor: ScheduledExecutorService = MoreExecutors.getExitingScheduledExecutorService(
     new ScheduledThreadPoolExecutor(PoolSize),
