@@ -11,7 +11,8 @@ import java.util.concurrent.{ScheduledExecutorService, ScheduledThreadPoolExecut
 @Singleton
 class Service @Inject() (
     bme680: Bme680,
-    mhz19c: Mhz19c
+    mhz19c: Mhz19c,
+    persistData: PersistData
 ) {
 
   import scala.concurrent.duration.*
@@ -38,7 +39,8 @@ class Service @Inject() (
         for {
           tph <- bme680.refresh()
           co2 <- mhz19c.refresh()
-          
+
+          _ = persistData.persist(tph, co2)
         } yield ()
       } catch {
         case e: Throwable => logger.warn("Unhandled exception at the daemon thread", e)
