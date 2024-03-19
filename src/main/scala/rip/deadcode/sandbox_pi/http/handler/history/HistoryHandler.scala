@@ -13,7 +13,7 @@ import scala.util.matching.compat.Regex
 @Singleton
 class HistoryHandler @Inject() (reader: Reader) extends HttpHandler {
 
-  override def url: Regex = "^/history(\\?.+)?".r
+  override def url: Regex = "^/history(\\?.+)?$".r
 
   override def method: String = "GET"
 

@@ -6,6 +6,7 @@ import rip.deadcode.sandbox_pi.http.handler.helloworld.HelloWorldHandler
 import rip.deadcode.sandbox_pi.http.handler.history.HistoryHandler
 import rip.deadcode.sandbox_pi.http.handler.led.LedHandler
 import rip.deadcode.sandbox_pi.http.handler.pi_temperature.PiTemperatureHandler
+import rip.deadcode.sandbox_pi.http.handler.stat.StatHandler
 
 @Singleton
 class Handlers @Inject() (
@@ -13,7 +14,8 @@ class Handlers @Inject() (
     ledHandler: LedHandler,
     piTemperatureHandler: PiTemperatureHandler,
     environmentHandler: EnvironmentHandler,
-    historyHandler: HistoryHandler
+    historyHandler: HistoryHandler,
+    statHandler: StatHandler
 ) {
 
   val handlers: Seq[HttpHandler] = Seq(
@@ -21,6 +23,7 @@ class Handlers @Inject() (
     ledHandler,
     piTemperatureHandler,
     environmentHandler,
-    historyHandler
+    historyHandler,
+    statHandler
   )
 }
