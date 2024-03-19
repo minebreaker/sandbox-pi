@@ -48,60 +48,55 @@ class Mhz19c @Inject() (pi4j: Pi4JContext, clock: Clock) {
 
   private def readData(): Int = {
 
-    logger.debug("Tries to open serial connection.")
-
-    Using.resource(serial) { serial =>
+    if (!serial.isOpen) {
+      logger.debug("Tries to open serial connection.")
       serial.open()
-      while (!serial.isOpen) {
-        Thread.sleep(100)
-        logger.debug("Not open yet.")
-      }
-
-      // Read command
-      serial.write(
-        Array[Byte](
-          0xFF.toByte,
-          0x01,
-          0x86.toByte,
-          0x00,
-          0x00,
-          0x00,
-          0x00,
-          0x00,
-          0x79
-        )
-      )
-
-      var read = true
-      val result = ByteBuffer.allocate(9)
-      while (read) {
-        val available = serial.available()
-        logger.debug("available: {}, pos: {}", available, result.position())
-        if (available > 0) {
-          val readAmount = serial.read(result, available)
-          logger.debug("read: {}{}", readAmount, show(result.array()))
-          if (result.position() >= 9) {
-            read = false
-          }
-        } else {
-          Thread.sleep(100)
-          logger.debug("Waiting for the data get available...")
-        }
-      }
-
-      logger.debug(show(result.array()))
-
-      val higher = result.get(2).toUnsigned
-      val lower = result.get(3).toUnsigned
-
-      val receivedChecksum = result.get(8).toUnsigned
-      val calculatedChecksum = (0xFF - result.array().slice(1, 8).map(_.toUnsigned).sum + 1).toByte.toUnsigned
-
-      val concentration = higher * 256 + lower
-      logger.info("CO2(ppm): {}", concentration)
-      logger.info("Checksum received: {}, calculated: {}", receivedChecksum, calculatedChecksum)
-
-      concentration
     }
+
+    // Read command
+    serial.write(
+      Array[Byte](
+        0xFF.toByte,
+        0x01,
+        0x86.toByte,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x79
+      )
+    )
+
+    var read = true
+    val result = ByteBuffer.allocate(9)
+    while (read) {
+      val available = serial.available()
+      logger.debug("available: {}, pos: {}", available, result.position())
+      if (available > 0) {
+        val readAmount = serial.read(result, available)
+        logger.debug("read: {}{}", readAmount, show(result.array()))
+        if (result.position() >= 9) {
+          read = false
+        }
+      } else {
+        Thread.sleep(100)
+        logger.debug("Waiting for the data get available...")
+      }
+    }
+
+    logger.debug(show(result.array()))
+
+    val higher = result.get(2).toUnsigned
+    val lower = result.get(3).toUnsigned
+
+    val receivedChecksum = result.get(8).toUnsigned
+    val calculatedChecksum = (0xFF - result.array().slice(1, 8).map(_.toUnsigned).sum + 1).toByte.toUnsigned
+
+    val concentration = higher * 256 + lower
+    logger.info("CO2(ppm): {}", concentration)
+    logger.info("Checksum received: {}, calculated: {}", receivedChecksum, calculatedChecksum)
+
+    concentration
   }
 }

@@ -7,6 +7,7 @@ import rip.deadcode.sandbox_pi.pi.bm680.Bme680
 import rip.deadcode.sandbox_pi.pi.mhz19c.Mhz19c
 
 import java.util.concurrent.{ScheduledExecutorService, ScheduledThreadPoolExecutor, TimeUnit}
+import scala.util.{Failure, Success}
 
 @Singleton
 class Service @Inject() (
@@ -36,12 +37,18 @@ class Service @Inject() (
   private class Runner extends Runnable {
     override def run(): Unit = {
       try {
-        for {
+        logger.debug("Daemon started.")
+        (for {
           tph <- bme680.refresh()
           co2 <- mhz19c.refresh()
 
           _ = persistData.persist(tph, co2)
-        } yield ()
+        } yield ()) match {
+          case Success(value) =>
+            logger.debug("Daemon finished.")
+          case Failure(e) =>
+            logger.debug("Daemon failed to execute", e)
+        }
       } catch {
         case e: Throwable => logger.warn("Unhandled exception at the daemon thread", e)
       }

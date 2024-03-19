@@ -2,33 +2,38 @@ package rip.deadcode.sandbox_pi.http.handler.history
 
 import com.google.inject.{Inject, Singleton}
 import org.jdbi.v3.core.Jdbi
-import rip.deadcode.sandbox_pi.db.model.{DayValue, MonthValue, Values}
+import rip.deadcode.sandbox_pi.db.model.EnvSample
 import rip.deadcode.sandbox_pi.http.handler.history.HistoryOutput.HistoryValue
-import rip.deadcode.sandbox_pi.utils.{formatCo2, formatHumidity, formatPressure, formatTemperature}
+import rip.deadcode.sandbox_pi.http.handler.history.Reader.{Summary, toOutput}
+import rip.deadcode.sandbox_pi.utils.{avg, formatCo2, formatHumidity, formatPressure, formatTemperature, med}
 
-import scala.jdk.OptionConverters.*
+import scala.jdk.CollectionConverters.*
 
 @Singleton
 private[history] class Reader @Inject() (jdbi: Jdbi) {
 
   def readMonth(y: Int, mo: Int): HistoryOutput = {
-    val values = Tables.map(t => s"${t}_month").map { table =>
-      jdbi.inTransaction { handle =>
-        handle
-          // language=SQL
-          .createQuery(
-            s"""select average, median, max, min, year, month
-                 |from $table
-                 |where year = :year and month = :month
-                 |""".stripMargin
-          )
-          .bind("year", y)
-          .bind("month", mo)
-          .mapTo(classOf[MonthValue])
-          .findOne()
-          .toScala
+    val values = Tables
+      .map { table =>
+        jdbi
+          .inTransaction { handle =>
+            handle
+              // language=SQL
+              .createQuery(
+                s"""select value, year, month, day, hour, minute
+                   |from $table
+                   |where year = :year and month = :month
+                   |""".stripMargin
+              )
+              .bind("year", y)
+              .bind("month", mo)
+              .mapTo(classOf[EnvSample])
+              .list()
+              .asScala
+              .toSeq
+          }
       }
-    }
+      .map(Summary.apply)
     val temperature = values.head
     val pressure = values(1)
     val humidity = values(2)
@@ -38,24 +43,27 @@ private[history] class Reader @Inject() (jdbi: Jdbi) {
   }
 
   def readDay(y: Int, mo: Int, d: Int): HistoryOutput = {
-    val values = Tables.map(t => s"${t}_day").map { table =>
-      jdbi.inTransaction { handle =>
-        handle
-          // language=SQL
-          .createQuery(
-            s"""select average, median, max, min, year, month, day
+    val values = Tables
+      .map { table =>
+        jdbi.inTransaction { handle =>
+          handle
+            // language=SQL
+            .createQuery(
+              s"""select value, year, month, day, hour, minute
                |from $table
                |where year = :year and month = :month and day = :day
                |""".stripMargin
-          )
-          .bind("year", y)
-          .bind("month", mo)
-          .bind("day", d)
-          .mapTo(classOf[DayValue])
-          .findOne()
-          .toScala
+            )
+            .bind("year", y)
+            .bind("month", mo)
+            .bind("day", d)
+            .mapTo(classOf[EnvSample])
+            .list()
+            .asScala
+            .toSeq
+        }
       }
-    }
+      .map(Summary.apply)
     val temperature = values.head
     val pressure = values(1)
     val humidity = values(2)
@@ -65,25 +73,28 @@ private[history] class Reader @Inject() (jdbi: Jdbi) {
   }
 
   def readHour(y: Int, mo: Int, d: Int, h: Int): HistoryOutput = {
-    val values = Tables.map(t => s"${t}_hour").map { table =>
-      jdbi.inTransaction { handle =>
-        handle
-          // language=SQL
-          .createQuery(
-            s"""select average, median, max, min, year, month, day, hour
-               |from $table
-               |where year = :year and month = :month and day = :day and hour = :hour
-               |""".stripMargin
-          )
-          .bind("year", y)
-          .bind("month", mo)
-          .bind("day", d)
-          .bind("hour", h)
-          .mapTo(classOf[DayValue])
-          .findOne()
-          .toScala
+    val values = Tables
+      .map { table =>
+        jdbi.inTransaction { handle =>
+          handle
+            // language=SQL
+            .createQuery(
+              s"""select value, year, month, day, hour, minute
+                 |from $table
+                 |where year = :year and month = :month and day = :day and hour = :hour
+                 |""".stripMargin
+            )
+            .bind("year", y)
+            .bind("month", mo)
+            .bind("day", d)
+            .bind("hour", h)
+            .mapTo(classOf[EnvSample])
+            .list()
+            .asScala
+            .toSeq
+        }
       }
-    }
+      .map(Summary.apply)
     val temperature = values.head
     val pressure = values(1)
     val humidity = values(2)
@@ -98,60 +109,48 @@ private[history] class Reader @Inject() (jdbi: Jdbi) {
     "humidity",
     "co2"
   )
+}
+
+object Reader {
+
+  private case class Summary(
+      average: Double,
+      median: Double,
+      max: Double,
+      min: Double
+  ) {
+    def toResult(format: Double => String): HistoryValue = HistoryValue(
+      format(this.average),
+      this.average,
+      format(this.median),
+      this.median,
+      format(this.max),
+      this.max,
+      format(this.min),
+      this.min
+    )
+  }
+
+  private object Summary {
+    def apply(samples: Seq[EnvSample]): Option[Summary] = {
+      if (samples.isEmpty) {
+        None
+      } else {
+        val sample = samples.map(_.value.toDouble)
+        Some(Summary(sample.avg, sample.med, sample.max, sample.min))
+      }
+    }
+  }
 
   private def toOutput(
-      temperature: Option[Values],
-      pressure: Option[Values],
-      humidity: Option[Values],
-      co2: Option[Values]
+      temperature: Option[Summary],
+      pressure: Option[Summary],
+      humidity: Option[Summary],
+      co2: Option[Summary]
   ) = HistoryOutput(
-    temperature = temperature.map(v =>
-      HistoryValue(
-        formatTemperature(v.average),
-        v.average.toDouble,
-        formatTemperature(v.median),
-        v.median.toDouble,
-        formatTemperature(v.max),
-        v.max.toDouble,
-        formatTemperature(v.min),
-        v.min.toDouble
-      )
-    ),
-    pressure = pressure.map(v =>
-      HistoryValue(
-        formatPressure(v.average),
-        v.average.toDouble,
-        formatPressure(v.median),
-        v.median.toDouble,
-        formatPressure(v.max),
-        v.max.toDouble,
-        formatPressure(v.min),
-        v.min.toDouble
-      )
-    ),
-    humidity = humidity.map(v =>
-      HistoryValue(
-        formatHumidity(v.average),
-        v.average.toDouble,
-        formatHumidity(v.median),
-        v.median.toDouble,
-        formatHumidity(v.max),
-        v.max.toDouble,
-        formatHumidity(v.min),
-        v.min.toDouble
-      )
-    ),
-    co2 = co2.map(v =>
-      HistoryValue(
-        formatCo2(v.average),
-        v.average.toDouble,
-        formatCo2(v.median),
-        v.median.toDouble,
-        formatCo2(v.max),
-        v.max.toDouble,
-        formatCo2(v.min),
-        v.min.toDouble
-      )
-    )
+    temperature = temperature.map(_.toResult(formatTemperature)),
+    pressure = pressure.map(_.toResult(formatPressure)),
+    humidity = humidity.map(_.toResult(formatHumidity)),
+    co2 = co2.map(_.toResult(formatCo2))
   )
 }

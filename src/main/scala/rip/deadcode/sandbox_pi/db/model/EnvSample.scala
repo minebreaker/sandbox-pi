@@ -1,6 +1,6 @@
 package rip.deadcode.sandbox_pi.db.model
 
-case class MinuteValue(
+case class EnvSample(
     value: String,
     year: Int,
     month: Int,
