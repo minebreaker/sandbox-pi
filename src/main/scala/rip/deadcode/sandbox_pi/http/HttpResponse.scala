@@ -19,7 +19,7 @@ object HttpResponse {
       extends HttpResponse {
 
     def encode: String = {
-      import io.circe.syntax._
+      import io.circe.syntax.*
       body.asJson.noSpaces
     }
   }
@@ -31,10 +31,15 @@ object HttpResponse {
       InvalidParameter(param)
     )
 
-    case class InvalidParameter(reason: String)
+    def unknownError(message: String): JsonHttpResponse[ErrorResponse] = JsonHttpResponse(
+      500,
+      ErrorResponse(message)
+    )
 
-    object InvalidParameter {
-      implicit val encoder: Encoder[InvalidParameter] = deriveEncoder
-    }
+    implicit val encodeInvalidParameter: Encoder[InvalidParameter] = deriveEncoder
+    implicit val encoderError: Encoder[ErrorResponse] = deriveEncoder
+
+    case class InvalidParameter(message: String)
+    case class ErrorResponse(message: String)
   }
 }

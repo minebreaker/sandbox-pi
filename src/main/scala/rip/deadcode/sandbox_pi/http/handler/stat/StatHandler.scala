@@ -25,7 +25,7 @@ class StatHandler @Inject() (reader: Reader) extends HttpHandler {
       result <- patternParam match {
         case Some("day")   => IO.blocking { reader.readDay() }
         case Some("7days") => IO.blocking { reader.read7Days() }
-        case Some("month") => IO.blocking { ??? }
+        case Some("month") => IO.blocking { reader.readMonth() }
         case _             => IO.raiseError(InvalidParameter("p"))
       }
     } yield JsonHttpResponse(

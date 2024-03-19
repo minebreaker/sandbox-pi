@@ -13,10 +13,10 @@ import org.eclipse.jetty.util.thread.QueuedThreadPool
 import org.slf4j.LoggerFactory
 import rip.deadcode.sandbox_pi.db.{createDataSource, createJdbi, setupFlyway}
 import rip.deadcode.sandbox_pi.http.HttpResponse.JsonHttpResponse
+import rip.deadcode.sandbox_pi.http.handler.environment.EnvironmentHandler
 import rip.deadcode.sandbox_pi.http.handler.helloworld.HelloWorldHandler
 import rip.deadcode.sandbox_pi.http.handler.led.LedHandler
 import rip.deadcode.sandbox_pi.http.handler.pi_temperature.PiTemperatureHandler
-import rip.deadcode.sandbox_pi.http.handler.environment.EnvironmentHandler
 import rip.deadcode.sandbox_pi.http.{Handlers, HttpHandler, NotFoundHandler}
 import rip.deadcode.sandbox_pi.service.Service
 
@@ -109,7 +109,7 @@ def runServer(): Unit = {
         case e @ JsonHttpResponse(_, body, _) =>
           logger.debug(s"Response: JSON\n{}", body)
           response.setContentType(MediaType.JSON_UTF_8.toString)
-          import io.circe.syntax._
+          import io.circe.syntax.*
           response.getWriter.print(e.encode)
       }
       baseRequest.setHandled(true)
@@ -118,17 +118,7 @@ def runServer(): Unit = {
   server.start()
 }
 
-case class ErrorResponse(message: String)
-
-object ErrorResponse {
-  import io.circe.generic.semiauto._
-  implicit val encoder: Encoder[ErrorResponse] = deriveEncoder
-}
-
 private def handlerUnexpected(e: Throwable) = {
   logger.warn("Unhandled exception", e)
-  JsonHttpResponse(
-    status = 500,
-    ErrorResponse("Internal server error.")
-  )
+  JsonHttpResponse.unknownError("Internal server error.")
 }
