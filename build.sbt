@@ -36,9 +36,10 @@ lazy val root = (project in file("."))
     Test / testForkedParallel := true,
 
     // Docker
-    dockerBaseImage := "amazoncorretto:21-alpine3.18",
+    Docker / dockerBaseImage := "amazoncorretto:21-alpine",
     Docker / packageName := "sandbox-pi",
     Docker / dockerExposedPorts := Seq(8080),
+    Docker / dockerBuildxPlatforms := Seq("linux/arm64"),
     // Fat jar
     assemblyMergeStrategy := {
       case "module-info.class"                                        => MergeStrategy.discard

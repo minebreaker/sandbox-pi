@@ -1,6 +1,6 @@
 services:
   sandbox-pi-server:
-    image: sandbox-pi:0.1.0-SNAPSHOT
+    image: ghcr.io/minebreaker/sandbox-pi:0.1.0-SNAPSHOT
     #    restart: unless-stopped
     restart: "no"
     environment:
