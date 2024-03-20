@@ -37,7 +37,7 @@ lazy val root = (project in file("."))
 
     // Docker
     dockerBaseImage := "amazoncorretto:21-alpine3.18",
-    Docker / packageName := "sschm",
+    Docker / packageName := "sandbox-pi",
     Docker / dockerExposedPorts := Seq(8080),
     // Fat jar
     assemblyMergeStrategy := {
