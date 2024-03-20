@@ -51,10 +51,11 @@ private[stat] class Reader @Inject() (jdbi: Jdbi, clock: Clock) {
           }
           .toMap
       }
-    val temperature = values.head
-    val pressure = values(1)
-    val humidity = values(2)
-    val co2 = values(3)
+    val init = Range(0, 24).map(i => (i.toString, None)).toMap[String, Option[Reader.Summary]]
+    val temperature = init ++ values.head
+    val pressure = init ++ values(1)
+    val humidity = init ++ values(2)
+    val co2 = init ++ values(3)
 
     toOutput(temperature, pressure, humidity, co2)
   }

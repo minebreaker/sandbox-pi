@@ -12,12 +12,12 @@ import org.eclipse.jetty.server.{Request, Server, ServerConnector}
 import org.eclipse.jetty.util.thread.QueuedThreadPool
 import org.slf4j.LoggerFactory
 import rip.deadcode.sandbox_pi.db.{createDataSource, createJdbi, setupFlyway}
-import rip.deadcode.sandbox_pi.http.HttpResponse.JsonHttpResponse
+import rip.deadcode.sandbox_pi.http.HttpResponse.{JsonHttpResponse, StringHttpResponse}
 import rip.deadcode.sandbox_pi.http.handler.environment.EnvironmentHandler
 import rip.deadcode.sandbox_pi.http.handler.helloworld.HelloWorldHandler
 import rip.deadcode.sandbox_pi.http.handler.led.LedHandler
 import rip.deadcode.sandbox_pi.http.handler.pi_temperature.PiTemperatureHandler
-import rip.deadcode.sandbox_pi.http.{Handlers, HttpHandler, NotFoundHandler}
+import rip.deadcode.sandbox_pi.http.{Handlers, HttpHandler, HttpResponse, NotFoundHandler}
 import rip.deadcode.sandbox_pi.service.Service
 
 import java.time.{ZoneId, ZoneOffset}
@@ -55,7 +55,7 @@ def runServer(): Unit = {
     Stage.PRODUCTION
   }
 
-  val guice = Guice.createInjector(
+  val injector = Guice.createInjector(
     stage,
     new PiModule(
       config,
@@ -65,7 +65,7 @@ def runServer(): Unit = {
   )
 
   // Start a daemon thread
-  val service = guice.getInstance(classOf[Service])
+  val service = injector.getInstance(classOf[Service])
   service.start()
 
   val threadPool = QueuedThreadPool()
@@ -75,7 +75,7 @@ def runServer(): Unit = {
     .tap(_.setPort(config.port))
   server.addConnector(connector)
 
-  val handlers = guice.getInstance(classOf[Handlers]).handlers
+  val handlers = injector.getInstance(classOf[Handlers]).handlers
   val notFoundHandler = NotFoundHandler()
 
   server.setHandler(new AbstractHandler {
@@ -106,6 +106,10 @@ def runServer(): Unit = {
         response.setHeader(name, value)
       }
       result match {
+        case StringHttpResponse(status, contentType, body, header) =>
+          logger.debug("Response: string\n{}", body)
+          response.setContentType(contentType.toString)
+          response.getWriter.write(body)
         case e @ JsonHttpResponse(_, body, _) =>
           logger.debug(s"Response: JSON\n{}", body)
           response.setContentType(MediaType.JSON_UTF_8.toString)

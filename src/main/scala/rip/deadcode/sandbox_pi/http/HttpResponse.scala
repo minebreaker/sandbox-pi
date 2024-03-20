@@ -11,6 +11,13 @@ sealed trait HttpResponse {
 
 object HttpResponse {
 
+  case class StringHttpResponse(
+      status: Int,
+      contentType: MediaType,
+      body: String,
+      header: Map[String, String] = Map.empty
+  ) extends HttpResponse
+
   case class JsonHttpResponse[T](
       status: Int,
       body: T,

@@ -9,7 +9,7 @@
   </appender>
 
   <logger name="rip.deadcode.sandbox_pi">
-    <level value="debug"/>
+    <level value="info"/>
   </logger>
 
   <logger name="com.pi4j">
