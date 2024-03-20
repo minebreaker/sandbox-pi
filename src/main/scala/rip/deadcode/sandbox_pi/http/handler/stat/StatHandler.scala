@@ -23,6 +23,7 @@ class StatHandler @Inject() (reader: Reader) extends HttpHandler {
 
     val f = for {
       result <- patternParam match {
+        case Some("hour")  => IO.blocking { reader.readHour() }
         case Some("day")   => IO.blocking { reader.readDay() }
         case Some("7days") => IO.blocking { reader.read7Days() }
         case Some("month") => IO.blocking { reader.readMonth() }

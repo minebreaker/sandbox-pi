@@ -62,7 +62,7 @@ class PersistData @Inject() (jdbi: Jdbi, clock: Clock) {
         .createQuery(
           s"""select value, year, month, day, hour, minute
              |from $table
-             |where year = :year and month = :month and day = :day and minute = :minute
+             |where year = :year and month = :month and day = :day and hour = :hour and minute = :minute
              |""".stripMargin
         )
         .bind("year", y)

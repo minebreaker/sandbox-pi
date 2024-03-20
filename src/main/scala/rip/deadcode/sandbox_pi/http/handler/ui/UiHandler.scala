@@ -38,16 +38,38 @@ private object UiHandler {
     """<!DOCTYPE html>
       |<html lang="en">
       |<head>
+      |  <meta charset="utf-8">
       |  <title>sandbox-pi</title>
+      |  <meta name="viewport" content="width=device-width, initial-scale=1">
       |  <script src="https://code.highcharts.com/highcharts.js"></script>
       |  <script src="http://code.highcharts.com/highcharts-more.js"></script>
+      |  <style>
+      |    .container {
+      |      width: 100dvw;
+      |      height: 100dvh;
+      |      display: grid;
+      |      grid-template-columns: 1fr 1fr;
+      |    }
+      |    .item {
+      |      width: 50dvw;
+      |      height: 50dvh;
+      |    }
+      |    @media only screen and (max-width: 768px) {
+      |      .container {
+      |        grid-template-columns: 1fr;
+      |      }
+      |      .item {
+      |        width: 100dvw;
+      |      }
+      |    }
+      |  </style>
       |</head>
       |<body style="margin: 0">
-      |  <div style="width: 100dvw; height: 100dvh; display: grid; grid-template-columns: 1fr 1fr;">
-      |    <div id="c_t" style="width: 50dvw; height: 50dvh;"></div>
-      |    <div id="c_p" style="width: 50dvw; height: 50dvh;"></div>
-      |    <div id="c_h" style="width: 50dvw; height: 50dvh;"></div>
-      |    <div id="c_c" style="width: 50dvw; height: 50dvh;"></div>
+      |  <div class="container">
+      |    <div id="c_t" class="item" "></div>
+      |    <div id="c_p" class="item""></div>
+      |    <div id="c_h" class="item""></div>
+      |    <div id="c_c" class="item""></div>
       |  </div>
       |  <script>
       |    document.addEventListener("DOMContentLoaded", () => {
@@ -84,6 +106,10 @@ private object UiHandler {
       |              name: "Max-Min",
       |              type: "arearange",
       |              data: tempMinMax,
+      |              lineWidth: 0,
+      |              color: Highcharts.getOptions().colors[0],
+      |              fillOpacity: 0.3,
+      |              marker: { enabled: false },
       |              connectNulls: true
       |            }
       |          ]
@@ -113,6 +139,10 @@ private object UiHandler {
       |              name: "Max-Min",
       |              type: "arearange",
       |              data: pMinMax,
+      |              lineWidth: 0,
+      |              color: Highcharts.getOptions().colors[0],
+      |              fillOpacity: 0.3,
+      |              marker: { enabled: false },
       |              connectNulls: true
       |            }
       |          ]
@@ -142,6 +172,10 @@ private object UiHandler {
       |              name: "Max-Min",
       |              type: "arearange",
       |              data: hMinMax,
+      |              lineWidth: 0,
+      |              color: Highcharts.getOptions().colors[0],
+      |              fillOpacity: 0.3,
+      |              marker: { enabled: false },
       |              connectNulls: true
       |            }
       |          ]
@@ -171,6 +205,10 @@ private object UiHandler {
       |              name: "Max-Min",
       |              type: "arearange",
       |              data: cMinMax,
+      |              lineWidth: 0,
+      |              color: Highcharts.getOptions().colors[0],
+      |              fillOpacity: 0.3,
+      |              marker: { enabled: false },
       |              connectNulls: true
       |            }
       |          ]

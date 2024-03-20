@@ -14,6 +14,54 @@ import scala.jdk.CollectionConverters.*
 @Singleton
 private[stat] class Reader @Inject() (jdbi: Jdbi, clock: Clock) {
 
+  def readHour(): StatOutput = {
+    val now = ZonedDateTime.now(clock)
+    val y = now.getYear
+    val mo = now.getMonthValue
+    val d = now.getDayOfMonth
+    val h = now.getHour
+
+    val values = Tables
+      .map { table =>
+        jdbi
+          .inTransaction { handle =>
+            handle
+              // language=SQL
+              .createQuery(
+                s"""select value, year, month, day, hour, minute
+                   |from $table
+                   |where year = :year and month = :month and day = :day and hour = :hour
+                   |""".stripMargin
+              )
+              .bind("year", y)
+              .bind("month", mo)
+              .bind("day", d)
+              .bind("hour", h)
+              .mapTo(classOf[EnvSample])
+              .list()
+              .asScala
+              .toSeq
+          }
+      }
+      .map { values =>
+        values
+          .groupBy(_.minute)
+          .toSeq
+          .map { case (i, values) =>
+            val summary = Reader.Summary(values)
+            (i.toString, summary)
+          }
+          .toMap
+      }
+    val init = Range(0, 59).map(i => (i.toString, None)).toMap[String, Option[Reader.Summary]]
+    val temperature = init ++ values.head
+    val pressure = init ++ values(1)
+    val humidity = init ++ values(2)
+    val co2 = init ++ values(3)
+
+    toOutput(temperature, pressure, humidity, co2)
+  }
+
   def readDay(): StatOutput = {
     val now = ZonedDateTime.now(clock)
     val y = now.getYear
