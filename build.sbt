@@ -18,6 +18,7 @@ lazy val root = (project in file("."))
       "com.typesafe" % "config" % "1.4.3",
       "ch.qos.logback" % "logback-classic" % "1.4.14",
       "io.circe" %% "circe-core" % "0.15.0-M1",
+      "io.circe" %% "circe-parser" % "0.15.0-M1",
       "io.circe" %% "circe-generic" % "0.15.0-M1",
       // Database
       "org.jdbi" % "jdbi3-core" % "3.43.0",
