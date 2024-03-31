@@ -254,6 +254,16 @@ private[bm680] class Device(pi4j: Pi4JContext) {
     logger.info("Press(Pa): {}", String.format("%.8f", pressComp))
     logger.info("Hum(%):    {}", String.format("%.8f", humComp))
 
+    if (tempComp >= 50 || tempComp <= -20) {
+      throw new RuntimeException(s"Data integrity check failed: Unlikely temperature value: $tempComp")
+    }
+    if (pressComp >= 12000 || pressComp <= 8000) {
+      throw new RuntimeException(s"Data integrity check failed: Unlikely pressure value: $pressComp")
+    }
+    if (humComp > 100 || humComp < 0) {
+      throw new RuntimeException(s"Data integrity check failed: Unlikely humidity value: $humComp")
+    }
+
     Data(tempComp, pressComp, humComp)
   }
 }
