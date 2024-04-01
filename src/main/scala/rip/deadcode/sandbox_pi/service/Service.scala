@@ -47,7 +47,7 @@ class Service @Inject() (
           case Success(value) =>
             logger.debug("Daemon finished.")
           case Failure(e) =>
-            logger.debug("Daemon failed to execute", e)
+            logger.warn("Daemon failed to execute", e)
         }
       } catch {
         case e: Throwable => logger.warn("Unhandled exception at the daemon thread", e)
