@@ -73,7 +73,7 @@ private object UiHandler {
       |  </div>
       |  <script>
       |    document.addEventListener("DOMContentLoaded", () => {
-      |      fetch("http://192.168.0.5:8080/stat?p=day").then(response => {
+      |      fetch("/stat?p=day").then(response => {
       |        if (response.ok) {
       |          return response.json()
       |        } else {
