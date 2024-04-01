@@ -257,7 +257,7 @@ private[bm680] class Device(pi4j: Pi4JContext) {
     if (tempComp >= 50 || tempComp <= -20) {
       throw new RuntimeException(s"Data integrity check failed: Unlikely temperature value: $tempComp")
     }
-    if (pressComp >= 12000 || pressComp <= 8000) {
+    if (pressComp >= 120_000 || pressComp <= 80_000) {
       throw new RuntimeException(s"Data integrity check failed: Unlikely pressure value: $pressComp")
     }
     if (humComp > 100 || humComp < 0) {
