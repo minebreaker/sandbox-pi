@@ -93,6 +93,9 @@ private object UiHandler {
       |          xAxis: {
       |          },
       |          yAxis: {
+      |            title: {
+      |              text: "℃"
+      |            }
       |          },
       |          series: [
       |            {
@@ -126,6 +129,9 @@ private object UiHandler {
       |          xAxis: {
       |          },
       |          yAxis: {
+      |            title: {
+      |              text: "㎩"
+      |            }
       |          },
       |          series: [
       |            {
@@ -159,6 +165,9 @@ private object UiHandler {
       |          xAxis: {
       |          },
       |          yAxis: {
+      |            title: {
+      |              text: "％"
+      |            }
       |          },
       |          series: [
       |            {
@@ -192,6 +201,9 @@ private object UiHandler {
       |          xAxis: {
       |          },
       |          yAxis: {
+      |            title: {
+      |              text: "㏙"
+      |            }
       |          },
       |          series: [
       |            {
