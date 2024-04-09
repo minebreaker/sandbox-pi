@@ -18,7 +18,7 @@ import rip.deadcode.sandbox_pi.http.handler.helloworld.HelloWorldHandler
 import rip.deadcode.sandbox_pi.http.handler.led.LedHandler
 import rip.deadcode.sandbox_pi.http.handler.pi_temperature.PiTemperatureHandler
 import rip.deadcode.sandbox_pi.http.{Handlers, HttpHandler, HttpResponse, NotFoundHandler}
-import rip.deadcode.sandbox_pi.service.Service
+import rip.deadcode.sandbox_pi.service.{Discord, Service}
 
 import java.time.{ZoneId, ZoneOffset}
 import javax.sql.DataSource
@@ -31,6 +31,8 @@ private val logger = LoggerFactory.getLogger("rip.deadcode.sandbox_pi")
 
 def runServer(): Unit = {
 
+  implicit val catsRuntime: IORuntime = IORuntime.global
+
   logger.info("sandbox-pi starting up...")
 
   // pigpio requires root
@@ -40,7 +42,7 @@ def runServer(): Unit = {
   }
 
   val config = readConfig()
-  logger.info("Config: {}", config)
+  logConfig(config, logger)
 
   val pi4j = Pi4J.newAutoContext()
   // Pi4J object seems like automatically shut down, so we don't need to manually call shutdown()
@@ -63,6 +65,9 @@ def runServer(): Unit = {
       jdbi
     )
   )
+  
+  // Send startup notification
+  injector.getInstance(classOf[Discord]).sendStartupNotification().unsafeRunSync()
 
   // Start a daemon thread
   val service = injector.getInstance(classOf[Service])
@@ -85,8 +90,6 @@ def runServer(): Unit = {
         request: HttpServletRequest,
         response: HttpServletResponse
     ): Unit = {
-
-      implicit val catsRuntime: IORuntime = IORuntime.global
 
       logger.debug(s"Target url: $target")
       val targetHandler: HttpHandler = handlers

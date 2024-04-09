@@ -1,5 +1,6 @@
 package rip.deadcode.sandbox_pi.service
 
+import cats.effect.unsafe.IORuntime
 import com.google.common.util.concurrent.MoreExecutors
 import com.google.inject.{Inject, Singleton}
 import org.slf4j.LoggerFactory
@@ -13,7 +14,8 @@ import scala.util.{Failure, Success}
 class Service @Inject() (
     bme680: Bme680,
     mhz19c: Mhz19c,
-    persistData: PersistData
+    persistData: PersistData,
+    discord: Discord
 ) {
 
   import scala.concurrent.duration.*
@@ -36,6 +38,8 @@ class Service @Inject() (
 
   private class Runner extends Runnable {
     override def run(): Unit = {
+      // FIXME
+      implicit val catsRuntime: IORuntime = IORuntime.global
       try {
         logger.debug("Daemon started.")
         (for {
@@ -43,8 +47,11 @@ class Service @Inject() (
           co2 <- mhz19c.refresh()
 
           _ = persistData.persist(tph, co2)
+          // FIXME
+          _ = discord.run(tph, co2).unsafeRunSync()
+
         } yield ()) match {
-          case Success(value) =>
+          case Success(_) =>
             logger.debug("Daemon finished.")
           case Failure(e) =>
             logger.warn("Daemon failed to execute", e)

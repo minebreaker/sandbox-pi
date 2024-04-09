@@ -27,7 +27,11 @@ lazy val root = (project in file("."))
       "org.flywaydb" % "flyway-core" % "9.22.3",
       // Scala thing
       "org.typelevel" %% "cats-effect" % "3.5.3",
-      "io.scalaland" %% "chimney" % "0.8.5"
+      "io.scalaland" %% "chimney" % "0.8.5",
+      // Sttp
+      "com.softwaremill.sttp.client3" %% "core" % "3.9.5",
+      "com.softwaremill.sttp.client3" %% "circe" % "3.9.5",
+      "com.softwaremill.sttp.client3" %% "cats" % "3.9.5"
     ) ++ Seq(
       "org.scalatest" %% "scalatest-funspec" % "3.2.17",
       "org.scalatestplus" %% "mockito-4-11" % "3.2.17.0"

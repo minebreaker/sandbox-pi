@@ -16,7 +16,7 @@ import scala.math.Ordered.orderingToOrdered
 import scala.reflect.ClassTag
 
 @Singleton
-class PersistData @Inject() (clock: Clock, writeStats: WriteStats) {
+private[service] class PersistData @Inject() (clock: Clock, writeStats: WriteStats) {
 
   private val logger = LoggerFactory.getLogger(classOf[PersistData])
 
