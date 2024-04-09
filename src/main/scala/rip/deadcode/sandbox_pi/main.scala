@@ -11,6 +11,7 @@ import org.eclipse.jetty.server.handler.AbstractHandler
 import org.eclipse.jetty.server.{Request, Server, ServerConnector}
 import org.eclipse.jetty.util.thread.QueuedThreadPool
 import org.slf4j.LoggerFactory
+import rip.deadcode.sandbox_pi.build_info.BuildInfo
 import rip.deadcode.sandbox_pi.db.{createDataSource, createJdbi, setupFlyway}
 import rip.deadcode.sandbox_pi.http.HttpResponse.{JsonHttpResponse, StringHttpResponse}
 import rip.deadcode.sandbox_pi.http.handler.environment.EnvironmentHandler
@@ -43,6 +44,7 @@ def runServer(): Unit = {
 
   val config = readConfig()
   logConfig(config, logger)
+  logger.info("BuildInfo: {}", BuildInfo)
 
   val pi4j = Pi4J.newAutoContext()
   // Pi4J object seems like automatically shut down, so we don't need to manually call shutdown()
@@ -65,7 +67,7 @@ def runServer(): Unit = {
       jdbi
     )
   )
-  
+
   // Send startup notification
   injector.getInstance(classOf[Discord]).sendStartupNotification().unsafeRunSync()
 

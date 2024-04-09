@@ -2,6 +2,7 @@ lazy val root = (project in file("."))
   .enablePlugins(JavaAppPackaging)
   .enablePlugins(DockerPlugin)
   .enablePlugins(AshScriptPlugin)
+  .enablePlugins(BuildInfoPlugin)
   .settings(
     name := "sandbox-pi",
     organization := "rip.deadcode",
@@ -39,6 +40,10 @@ lazy val root = (project in file("."))
     Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest),
     Test / fork := true,
     Test / testForkedParallel := true,
+
+    // Buildinfo
+    buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion),
+    buildInfoPackage := "rip.deadcode.sandbox_pi.build_info",
 
     // Docker
     Docker / dockerBaseImage := "amazoncorretto:21-alpine",
