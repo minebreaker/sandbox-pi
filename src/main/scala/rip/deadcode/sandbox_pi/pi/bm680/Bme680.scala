@@ -9,7 +9,6 @@ import rip.deadcode.sandbox_pi.utils.*
 
 import java.nio.ByteBuffer
 import java.time.Clock
-import java.util.concurrent.atomic.AtomicReference
 import scala.util.Try
 
 @Singleton
@@ -90,7 +89,7 @@ private[bm680] class Device(pi4j: Pi4JContext) {
     readCalibrationData()
   }
 
-  def readCalibrationData(): Unit = {
+  private def readCalibrationData(): Unit = {
     // Temperature calibration
     val parT1B = i2c.readRegisterByteBuffer(0xE9, 2)
     val parT2T3B = i2c.readRegisterByteBuffer(0x8A, 3)

@@ -17,7 +17,6 @@ import sttp.model.{StatusCode, Uri}
 
 import java.time.temporal.TemporalUnit
 import java.time.{Clock, Instant}
-import java.util.concurrent.atomic.AtomicReference
 
 // TODO separate the daemon runner from the discord service itself
 @Singleton
@@ -28,21 +27,23 @@ class Discord @Inject() (clock: Clock, config: Config) {
   private val maybeWebhookString: Option[String] = config.discord.webhook
   private val maybeWebhookUrl: Option[Uri] = maybeWebhookString.map(Uri.unsafeParse)
 
-  private val lastSentHumLower: AtomicReference[Instant] = AtomicReference(Instant.ofEpochSecond(0))
+  private var lastSentHumLower: Instant = Instant.ofEpochSecond(0)
   private val humLowerThreshold = 40
-  private val lastSentHumUpper: AtomicReference[Instant] = AtomicReference(Instant.ofEpochSecond(0))
+  private var lastSentHumUpper: Instant = Instant.ofEpochSecond(0)
   private val humUpperThreshold = 70
-  private val lastSentCo2: AtomicReference[Instant] = AtomicReference(Instant.ofEpochSecond(0))
+  private var lastSentCo2: Instant = Instant.ofEpochSecond(0)
   private val co2UpperThreshold = 1000
 
   def run(tph: Bme680Output, co2: Mhz19cOutput): IO[Unit] = {
     maybeWebhookUrl match {
       case Some(value) =>
-        sendNotification(value, tph, co2).recover {
-          case e: SttpClientException =>
-            logger.warn("Failed to send webhook: Sttp error", e)
-          case e: ErrorResponse =>
-            logger.warn(s"Failed to send webhook: Invalid response [code={}]", e.status)
+        this.synchronized {
+          sendNotification(value, tph, co2).recover {
+            case e: SttpClientException =>
+              logger.warn("Failed to send webhook: Sttp error", e)
+            case e: ErrorResponse =>
+              logger.warn(s"Failed to send webhook: Invalid response [code={}]", e.status)
+          }
         }
       case None => IO.unit
     }
@@ -61,9 +62,8 @@ class Discord @Inject() (clock: Clock, config: Config) {
     val now = clock.instant()
     for {
       _ <- IO.whenA(tph.hum < humLowerThreshold) {
-        val lastSent = lastSentHumLower.get() // This may send notifications twice but I don't care
-        if (lastSent.isBefore(now.minus(30.minutes.toJava))) {
-          lastSentHumLower.set(now)
+        if (lastSentHumLower.isBefore(now.minus(30.minutes.toJava))) {
+          lastSentHumLower = now
           send(webhook, s"Humidity is too low! (${formatHumidity(tph.hum)})")
         } else {
           IO {
@@ -72,9 +72,8 @@ class Discord @Inject() (clock: Clock, config: Config) {
         }
       }
       _ <- IO.whenA(tph.hum > humUpperThreshold) {
-        val lastSent = lastSentHumUpper.get()
-        if (lastSent.isBefore(now.minus(30.minutes.toJava))) {
-          lastSentHumUpper.set(now)
+        if (lastSentHumUpper.isBefore(now.minus(30.minutes.toJava))) {
+          lastSentHumUpper = now
           send(webhook, s"Humidity is too high! (${formatHumidity(tph.hum)})")
         } else {
           IO {
@@ -83,9 +82,8 @@ class Discord @Inject() (clock: Clock, config: Config) {
         }
       }
       _ <- IO.whenA(co2.co2 > co2UpperThreshold) {
-        val lastSent = lastSentCo2.get()
-        if (lastSent.isBefore(now.minus(30.minutes.toJava))) {
-          lastSentCo2.set(now)
+        if (lastSentCo2.isBefore(now.minus(30.minutes.toJava))) {
+          lastSentCo2 = now
           send(webhook, s"CO2 is too high! (${formatCo2(co2.co2)})")
         } else {
           IO {
