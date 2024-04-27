@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "npm run bundle && npm run copy",
-    "bundle": "esbuild target/scala-3.4.0/frontend-fastopt/main.js --bundle --minify --sourcemap --outfile=target/main.js",
+    "bundle": "esbuild target/scala-3.4.0/sandbox-pi-frontend-fastopt/main.js --bundle --minify --sourcemap --outfile=target/main.js",
     "copy": "echo TODO",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

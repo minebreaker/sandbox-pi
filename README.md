@@ -7,13 +7,13 @@ My Raspberry Pi experiments
 
 ```bash
 # Create UberJAR
-sbt assembly
+sbt backend/assembly
 
 # Create Docker image
-sbt docker:publishLocal
+sbt backend/docker:publishLocal
 
-sbt fastLinkJS
-sbt fullLinkJS
+sbt frontend/fastLinkJS
+sbt frontend/fullLinkJS
 ```
 
 ## Publish docker image

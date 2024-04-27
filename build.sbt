@@ -2,12 +2,28 @@ ThisBuild / version := "0.1.0-SNAPSHOT"
 ThisBuild / scalaVersion := "3.4.0"
 
 lazy val root = (project in file("."))
+  .aggregate(backend, frontend)
+
+val scalaJsSettings = scalaJSLinkerConfig ~= {
+  _.withModuleKind(ModuleKind.ESModule)
+    .withModuleSplitStyle(
+      org.scalajs.linker.interface.ModuleSplitStyle.SmallModulesFor(List("livechart"))
+    )
+}
+
+lazy val shared = (project in file("shared"))
+  .enablePlugins(ScalaJSPlugin)
+  .settings(
+    scalaJsSettings
+  )
+
+lazy val backend = (project in file("backend"))
   .enablePlugins(JavaAppPackaging)
   .enablePlugins(DockerPlugin)
   .enablePlugins(AshScriptPlugin)
   .enablePlugins(BuildInfoPlugin)
   .settings(
-    name := "sandbox-pi",
+    name := "backend",
     organization := "rip.deadcode",
     libraryDependencies := Seq(
       // Core
@@ -16,7 +32,7 @@ lazy val root = (project in file("."))
       "com.google.inject" % "guice" % "7.0.0",
       "com.pi4j" % "pi4j-plugin-raspberrypi" % "2.4.0",
       "com.pi4j" % "pi4j-plugin-pigpio" % "2.4.0",
-//      "com.pi4j" % "pi4j-plugin-linuxfs" % "2.4.0",
+      //      "com.pi4j" % "pi4j-plugin-linuxfs" % "2.4.0",
       "com.typesafe" % "config" % "1.4.3",
       "ch.qos.logback" % "logback-classic" % "1.4.14",
       "io.circe" %% "circe-core" % "0.15.0-M1",
@@ -58,7 +74,6 @@ lazy val root = (project in file("."))
       case v => (assembly / assemblyMergeStrategy).value.apply(v)
     }
   )
-  .aggregate(frontend)
 
 lazy val frontend = (project in file("frontend"))
   .enablePlugins(
@@ -74,15 +89,11 @@ lazy val frontend = (project in file("frontend"))
       scala.sys.process.Process("npm", baseDirectory.value).!
       baseDirectory.value
     },
-    scalaJSLinkerConfig ~= {
-      _.withModuleKind(ModuleKind.ESModule)
-        .withModuleSplitStyle(
-          org.scalajs.linker.interface.ModuleSplitStyle.SmallModulesFor(List("livechart"))
-        )
-    },
+    scalaJsSettings,
     libraryDependencies ++= Seq(
       "org.scala-js" %%% "scalajs-dom" % "2.4.0",
       "me.shadaj" %%% "slinky-core" % "0.7.3",
       "me.shadaj" %%% "slinky-web" % "0.7.3"
     )
   )
+  .dependsOn(shared % "test->test;compile->compile")
