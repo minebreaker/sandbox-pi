@@ -6,6 +6,7 @@ import io.circe.Encoder
 import io.circe.generic.semiauto.deriveEncoder
 import org.slf4j.LoggerFactory
 import rip.deadcode.sandbox_pi.Config
+import rip.deadcode.sandbox_pi.build_info.BuildInfo
 import rip.deadcode.sandbox_pi.pi.bm680.Bme680Output
 import rip.deadcode.sandbox_pi.pi.mhz19c.Mhz19cOutput
 import rip.deadcode.sandbox_pi.service.Discord.DiscordException.ErrorResponse
@@ -51,8 +52,17 @@ class Discord @Inject() (clock: Clock, config: Config) {
 
   def sendStartupNotification(): IO[Unit] = {
     maybeWebhookUrl match {
-      case Some(value) => send(value, s"Starting the sandbox-pi server...")
-      case None        => IO.unit
+      case Some(value) =>
+        send(
+          value,
+          s"""Starting the sandbox-pi server...
+             |---------------------------------
+             |Version: ${BuildInfo.version}
+             |Scala:   ${BuildInfo.scalaVersion}
+             |Sbt:     ${BuildInfo.sbtVersion}
+             |""".stripMargin
+        )
+      case None => IO.unit
     }
   }
 

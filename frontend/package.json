@@ -6,7 +6,7 @@
   "scripts": {
     "build": "npm run bundle && npm run copy",
     "bundle": "esbuild target/scala-3.4.0/sandbox-pi-frontend-fastopt/main.js --bundle --minify --sourcemap --outfile=target/main.js",
-    "copy": "echo TODO",
+    "copy": "cpx target/main.{js,js.map} ../backend/src/main/resources/ui/",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -22,6 +22,7 @@
   "devDependencies": {
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.0",
+    "cpx": "^1.5.0",
     "esbuild": "^0.20.2",
     "typescript": "^5.4.5"
   }

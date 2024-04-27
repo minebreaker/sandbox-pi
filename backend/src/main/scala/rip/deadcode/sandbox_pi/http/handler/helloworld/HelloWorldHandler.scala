@@ -12,7 +12,7 @@ import scala.util.matching.compat.Regex
 @Singleton
 class HelloWorldHandler @Inject() () extends HttpHandler {
 
-  override def url: Regex = "^/health$".r
+  override def url: Regex = "^/(hello|health)$".r
 
   override def method: String = "GET"
 

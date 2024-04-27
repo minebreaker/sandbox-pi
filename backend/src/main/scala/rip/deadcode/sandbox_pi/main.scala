@@ -68,12 +68,14 @@ def runServer(): Unit = {
     )
   )
 
-  // Send startup notification
+  // Send discord startup notification
   injector.getInstance(classOf[Discord]).sendStartupNotification().unsafeRunSync()
 
   // Start a daemon thread
   val service = injector.getInstance(classOf[Service])
   service.start()
+
+  // Start the server
 
   val threadPool = QueuedThreadPool()
     .tap(_.setName("server"))
@@ -111,6 +113,7 @@ def runServer(): Unit = {
         response.setHeader(name, value)
       }
       result match {
+        // TODO: streaming
         case StringHttpResponse(status, contentType, body, header) =>
           logger.debug("Response: string\n{}", body)
           response.setContentType(contentType.toString)
