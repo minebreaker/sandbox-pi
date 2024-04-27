@@ -11,6 +11,9 @@ sbt assembly
 
 # Create Docker image
 sbt docker:publishLocal
+
+sbt fastLinkJS
+sbt fullLinkJS
 ```
 
 ## Publish docker image

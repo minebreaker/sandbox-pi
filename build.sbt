@@ -1,3 +1,6 @@
+ThisBuild / version := "0.1.0-SNAPSHOT"
+ThisBuild / scalaVersion := "3.4.0"
+
 lazy val root = (project in file("."))
   .enablePlugins(JavaAppPackaging)
   .enablePlugins(DockerPlugin)
@@ -6,8 +9,6 @@ lazy val root = (project in file("."))
   .settings(
     name := "sandbox-pi",
     organization := "rip.deadcode",
-    scalaVersion := "3.4.0",
-    version := "0.1.0-SNAPSHOT",
     libraryDependencies := Seq(
       // Core
       "org.eclipse.jetty" % "jetty-server" % "11.0.14",
@@ -56,4 +57,32 @@ lazy val root = (project in file("."))
       case PathList("META-INF", "versions", "9", "module-info.class") => MergeStrategy.discard
       case v => (assembly / assemblyMergeStrategy).value.apply(v)
     }
+  )
+  .aggregate(frontend)
+
+lazy val frontend = (project in file("frontend"))
+  .enablePlugins(
+    ScalaJSPlugin,
+    ScalablyTypedConverterExternalNpmPlugin
+  )
+  .settings(
+    name := "frontend",
+    scalaJSUseMainModuleInitializer := true,
+    mainClass := Some("rip.deadcode.sandbox_pi.frontend.Main"),
+    stFlavour := Flavour.Slinky,
+    externalNpm := {
+      scala.sys.process.Process("npm", baseDirectory.value).!
+      baseDirectory.value
+    },
+    scalaJSLinkerConfig ~= {
+      _.withModuleKind(ModuleKind.ESModule)
+        .withModuleSplitStyle(
+          org.scalajs.linker.interface.ModuleSplitStyle.SmallModulesFor(List("livechart"))
+        )
+    },
+    libraryDependencies ++= Seq(
+      "org.scala-js" %%% "scalajs-dom" % "2.4.0",
+      "me.shadaj" %%% "slinky-core" % "0.7.3",
+      "me.shadaj" %%% "slinky-web" % "0.7.3"
+    )
   )

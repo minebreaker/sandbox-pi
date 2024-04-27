@@ -1,0 +1,28 @@
+{
+  "name": "sandbox-pi-frontend",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "npm run bundle && npm run copy",
+    "bundle": "esbuild target/scala-3.4.0/frontend-fastopt/main.js --bundle --minify --sourcemap --outfile=target/main.js",
+    "copy": "echo TODO",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "wip"
+  },
+  "author": "",
+  "license": "AGPL-3.0-or-later",
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.1",
+    "@types/react-dom": "^18.3.0",
+    "esbuild": "^0.20.2",
+    "typescript": "^5.4.5"
+  }
+}
