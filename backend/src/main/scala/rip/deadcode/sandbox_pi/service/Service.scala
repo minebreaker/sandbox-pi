@@ -1,5 +1,6 @@
 package rip.deadcode.sandbox_pi.service
 
+import cats.effect.IO
 import cats.effect.unsafe.IORuntime
 import com.google.common.util.concurrent.MoreExecutors
 import com.google.inject.{Inject, Singleton}
@@ -7,7 +8,10 @@ import org.slf4j.LoggerFactory
 import rip.deadcode.sandbox_pi.pi.bm680.Bme680
 import rip.deadcode.sandbox_pi.pi.mhz19c.Mhz19c
 
+import java.time.{Clock, Instant}
 import java.util.concurrent.{ScheduledExecutorService, ScheduledThreadPoolExecutor, TimeUnit}
+import scala.concurrent.Future
+import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success}
 
 @Singleton
@@ -15,7 +19,8 @@ class Service @Inject() (
     bme680: Bme680,
     mhz19c: Mhz19c,
     persistData: PersistData,
-    discord: Discord
+    discord: Discord,
+    runner: PeriodicRunner
 ) {
 
   import scala.concurrent.duration.*
@@ -25,7 +30,7 @@ class Service @Inject() (
 
   private val PoolSize = 1
   private val Timeout = 10.seconds.toJava
-  private val Period = 30.seconds.toJava
+  private val Period = 10.seconds.toJava
 
   private val executor: ScheduledExecutorService = MoreExecutors.getExitingScheduledExecutorService(
     new ScheduledThreadPoolExecutor(PoolSize),
@@ -38,24 +43,34 @@ class Service @Inject() (
 
   private class Runner extends Runnable {
     override def run(): Unit = {
-      // FIXME
-      implicit val catsRuntime: IORuntime = IORuntime.global
       try {
         logger.debug("Daemon started.")
-        (for {
-          tph <- bme680.refresh()
-          co2 <- mhz19c.refresh()
 
-          _ = persistData.persist(tph, co2)
-          // FIXME
-          _ = discord.run(tph, co2).unsafeRunSync()
+        runner.run { () =>
+          import scala.concurrent.duration.*
+          import runner.*
+          every(30.seconds, "Update env info") {
+            IO.blocking {
+              (for {
+                // FIXME
+                tph <- bme680.refresh()
+                co2 <- mhz19c.refresh()
 
-        } yield ()) match {
-          case Success(_) =>
-            logger.debug("Daemon finished.")
-          case Failure(e) =>
-            logger.warn("Daemon failed to execute", e)
+                _ = persistData.persist(tph, co2)
+
+              } yield ()) match {
+                case Success(_) =>
+                  logger.debug("Daemon finished.")
+                case Failure(e) =>
+                  logger.warn("Daemon failed to execute", e)
+              }
+            }
+          }
+          every(30.seconds, "Discord notification") {
+            discord.run()
+          }
         }
+
       } catch {
         case e: Throwable => logger.warn("Unhandled exception at the daemon thread", e)
       }

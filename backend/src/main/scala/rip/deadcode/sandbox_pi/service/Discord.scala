@@ -7,8 +7,8 @@ import io.circe.generic.semiauto.deriveEncoder
 import org.slf4j.LoggerFactory
 import rip.deadcode.sandbox_pi.Config
 import rip.deadcode.sandbox_pi.build_info.BuildInfo
-import rip.deadcode.sandbox_pi.pi.bm680.Bme680Output
-import rip.deadcode.sandbox_pi.pi.mhz19c.Mhz19cOutput
+import rip.deadcode.sandbox_pi.pi.bm680.{Bme680, Bme680Output}
+import rip.deadcode.sandbox_pi.pi.mhz19c.{Mhz19c, Mhz19cOutput}
 import rip.deadcode.sandbox_pi.service.Discord.DiscordException.ErrorResponse
 import rip.deadcode.sandbox_pi.service.Discord.{DiscordException, ExecuteRequest}
 import rip.deadcode.sandbox_pi.utils.{formatCo2, formatHumidity}
@@ -21,32 +21,34 @@ import java.time.{Clock, Instant}
 
 // TODO separate the daemon runner from the discord service itself
 @Singleton
-class Discord @Inject() (clock: Clock, config: Config) {
+class Discord @Inject() (bme680: Bme680, mhz19c: Mhz19c, clock: Clock, config: Config) {
 
   private val logger = LoggerFactory.getLogger(classOf[Discord])
 
   private val maybeWebhookString: Option[String] = config.discord.webhook
   private val maybeWebhookUrl: Option[Uri] = maybeWebhookString.map(Uri.unsafeParse)
 
-  private var lastSentHumLower: Instant = Instant.ofEpochSecond(0)
   private val humLowerThreshold = 40
-  private var lastSentHumUpper: Instant = Instant.ofEpochSecond(0)
   private val humUpperThreshold = 70
-  private var lastSentCo2: Instant = Instant.ofEpochSecond(0)
   private val co2UpperThreshold = 1000
 
-  def run(tph: Bme680Output, co2: Mhz19cOutput): IO[Unit] = {
+  def run(): IO[Unit] = {
     maybeWebhookUrl match {
       case Some(value) =>
-        this.synchronized {
-          sendNotification(value, tph, co2).recover {
+        for {
+          tph <- IO(bme680.getData)
+          co2 <- IO(mhz19c.getData)
+          _ <- sendNotification(value, tph, co2).recover {
             case e: SttpClientException =>
               logger.warn("Failed to send webhook: Sttp error", e)
             case e: ErrorResponse =>
               logger.warn(s"Failed to send webhook: Invalid response [code={}]", e.status)
           }
+        } yield ()
+      case None =>
+        IO {
+          logger.debug("Discord WebHook URL is not set.")
         }
-      case None => IO.unit
     }
   }
 
@@ -60,46 +62,29 @@ class Discord @Inject() (clock: Clock, config: Config) {
              |Version: ${BuildInfo.version}
              |Scala:   ${BuildInfo.scalaVersion}
              |Sbt:     ${BuildInfo.sbtVersion}
+             |---------------------------------
              |""".stripMargin
         )
-      case None => IO.unit
+      case None =>
+        IO {
+          logger.debug("Discord WebHook URL is not set.")
+        }
     }
   }
 
   private def sendNotification(webhook: Uri, tph: Bme680Output, co2: Mhz19cOutput): IO[Unit] = {
     import scala.concurrent.duration.*
     import scala.jdk.DurationConverters.*
-    val now = clock.instant()
     for {
+      now <- IO { clock.instant() }
       _ <- IO.whenA(tph.hum < humLowerThreshold) {
-        if (lastSentHumLower.isBefore(now.minus(30.minutes.toJava))) {
-          lastSentHumLower = now
-          send(webhook, s"Humidity is too low! (${formatHumidity(tph.hum)})")
-        } else {
-          IO {
-            logger.info("Skipping to send a notification (humidity): recently sent a notification.")
-          }
-        }
+        send(webhook, s"Humidity is too low! (${formatHumidity(tph.hum)})")
       }
       _ <- IO.whenA(tph.hum > humUpperThreshold) {
-        if (lastSentHumUpper.isBefore(now.minus(30.minutes.toJava))) {
-          lastSentHumUpper = now
-          send(webhook, s"Humidity is too high! (${formatHumidity(tph.hum)})")
-        } else {
-          IO {
-            logger.info("Skipping to send a notification (humidity): recently sent a notification.")
-          }
-        }
+        send(webhook, s"Humidity is too high! (${formatHumidity(tph.hum)})")
       }
       _ <- IO.whenA(co2.co2 > co2UpperThreshold) {
-        if (lastSentCo2.isBefore(now.minus(30.minutes.toJava))) {
-          lastSentCo2 = now
-          send(webhook, s"CO2 is too high! (${formatCo2(co2.co2)})")
-        } else {
-          IO {
-            logger.info("Skipping to send a notification (humidity): recently sent a notification.")
-          }
-        }
+        send(webhook, s"CO2 is too high! (${formatCo2(co2.co2)})")
       }
     } yield ()
   }
