@@ -13,17 +13,15 @@ class PersistData @Inject() (writeStats: WriteStats) {
   def persist(input: LogInput): IO[Unit] = {
     import cats.syntax.traverse.*
     input.items.traverse { i =>
-      IO.blocking {
-        writeStats.write(
-          i.target,
-          i.value,
-          i.timestamp.getYear,
-          i.timestamp.getMonthValue,
-          i.timestamp.getDayOfMonth,
-          i.timestamp.getHour,
-          i.timestamp.getMinute
-        )
-      }
+      writeStats.write(
+        i.target,
+        i.value,
+        i.timestamp.getYear,
+        i.timestamp.getMonthValue,
+        i.timestamp.getDayOfMonth,
+        i.timestamp.getHour,
+        i.timestamp.getMinute
+      )
     }.void
   }
 }

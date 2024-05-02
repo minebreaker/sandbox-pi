@@ -47,24 +47,20 @@ class Service @Inject() (
         logger.debug("Daemon started.")
 
         runner.run { () =>
-          import scala.concurrent.duration.*
           import runner.*
+
+          import scala.concurrent.duration.*
           every(30.seconds, "Update env info") {
-            IO.blocking {
-              (for {
-                // FIXME
-                tph <- bme680.refresh()
-                co2 <- mhz19c.refresh()
-
-                _ = persistData.persist(tph, co2)
-
-              } yield ()) match {
-                case Success(_) =>
-                  logger.debug("Daemon finished.")
-                case Failure(e) =>
-                  logger.warn("Daemon failed to execute", e)
+            for {
+              (tph, co2) <- IO.blocking {
+                (for {
+                  // FIXME
+                  tph <- bme680.refresh()
+                  co2 <- mhz19c.refresh()
+                } yield (tph, co2)).get
               }
-            }
+              _ <- persistData.persist(tph, co2)
+            } yield ()
           }
           every(30.seconds, "Discord notification") {
             discord.run()

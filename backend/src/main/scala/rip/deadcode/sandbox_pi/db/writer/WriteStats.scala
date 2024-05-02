@@ -1,5 +1,6 @@
 package rip.deadcode.sandbox_pi.db.writer
 
+import cats.effect.IO
 import com.google.inject.{Inject, Singleton}
 import org.jdbi.v3.core.Jdbi
 import org.slf4j.LoggerFactory
@@ -25,7 +26,7 @@ class WriteStats @Inject() (jdbi: Jdbi) {
       d: Int,
       h: Int,
       mi: Int
-  ): Unit = {
+  ): IO[Unit] = IO.blocking {
 
     val currentValue = jdbi.inTransaction { handle =>
       handle
@@ -48,24 +49,23 @@ class WriteStats @Inject() (jdbi: Jdbi) {
 
     if (currentValue.isDefined) {
       logger.debug("Already saved.")
-      return
+    } else {
+      jdbi.inTransaction { handle =>
+        handle
+          // language=SQL
+          .createUpdate(
+            s"""insert into $table (value, year, month, day, hour, minute)
+               |values (:value, :year, :month, :day, :hour, :minute)
+               |""".stripMargin
+          )
+          .bind("value", value)
+          .bind("year", y)
+          .bind("month", mo)
+          .bind("day", d)
+          .bind("hour", h)
+          .bind("minute", mi)
+          .execute()
+      }
     }
-
-    jdbi.inTransaction { handle =>
-      handle
-        // language=SQL
-        .createUpdate(
-          s"""insert into $table (value, year, month, day, hour, minute)
-             |values (:value, :year, :month, :day, :hour, :minute)
-             |""".stripMargin
-        )
-        .bind("value", value)
-        .bind("year", y)
-        .bind("month", mo)
-        .bind("day", d)
-        .bind("hour", h)
-        .bind("minute", mi)
-        .execute()
-    }
-  }
+  }.void
 }

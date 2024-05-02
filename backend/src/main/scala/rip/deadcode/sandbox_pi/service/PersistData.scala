@@ -1,5 +1,6 @@
 package rip.deadcode.sandbox_pi.service
 
+import cats.effect.IO
 import com.google.inject.{Inject, Singleton}
 import org.jdbi.v3.core.Jdbi
 import org.slf4j.LoggerFactory
@@ -20,19 +21,20 @@ private[service] class PersistData @Inject() (clock: Clock, writeStats: WriteSta
 
   private val logger = LoggerFactory.getLogger(classOf[PersistData])
 
-  def persist(tph: Bme680Output, co2: Mhz19cOutput): Unit = {
-
-    val (tphZdt, tphY, tphMo, tphD, tphH, tphMi) = timestampToTime(tph.timestamp)
-    val (co2Zdt, co2Y, co2Mo, co2D, co2H, co2Mi) = timestampToTime(co2.timestamp)
-
-    Seq(
-      ("temperature", tph.temp.toString),
-      ("pressure", tph.press.toString),
-      ("humidity", tph.hum.toString),
-      ("co2", co2.co2.toString)
-    ).foreach { (table, value) =>
-      writeStats.write(table, value, tphY, tphMo, tphD, tphH, tphMi)
-    }
+  def persist(tph: Bme680Output, co2: Mhz19cOutput): IO[Unit] = {
+    import cats.syntax.traverse.*
+    for {
+      (tphZdt, tphY, tphMo, tphD, tphH, tphMi) <- IO(timestampToTime(tph.timestamp))
+      (co2Zdt, co2Y, co2Mo, co2D, co2H, co2Mi) <- IO(timestampToTime(co2.timestamp))
+      _ <- Seq(
+        ("temperature", tph.temp.toString),
+        ("pressure", tph.press.toString),
+        ("humidity", tph.hum.toString),
+        ("co2", co2.co2.toString)
+      ).map { (table, value) =>
+        writeStats.write(table, value, tphY, tphMo, tphD, tphH, tphMi)
+      }.sequence
+    } yield ()
   }
 
   private def timestampToTime(ts: Instant) = {
