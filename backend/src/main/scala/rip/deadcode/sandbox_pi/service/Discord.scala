@@ -28,9 +28,9 @@ class Discord @Inject() (bme680: Bme680, mhz19c: Mhz19c, clock: Clock, config: C
   private val maybeWebhookString: Option[String] = config.discord.webhook
   private val maybeWebhookUrl: Option[Uri] = maybeWebhookString.map(Uri.unsafeParse)
 
-  private val humLowerThreshold = 40
-  private val humUpperThreshold = 70
-  private val co2UpperThreshold = 1000
+  private val HumLowerThreshold = 40
+  private val HumUpperThreshold = 70
+  private val Co2UpperThreshold = 1000
 
   def run(): IO[Unit] = {
     maybeWebhookUrl match {
@@ -77,13 +77,13 @@ class Discord @Inject() (bme680: Bme680, mhz19c: Mhz19c, clock: Clock, config: C
     import scala.jdk.DurationConverters.*
     for {
       now <- IO { clock.instant() }
-      _ <- IO.whenA(tph.hum < humLowerThreshold) {
+      _ <- IO.whenA(tph.hum < HumLowerThreshold) {
         send(webhook, s"Humidity is too low! (${formatHumidity(tph.hum)})")
       }
-      _ <- IO.whenA(tph.hum > humUpperThreshold) {
+      _ <- IO.whenA(tph.hum > HumUpperThreshold) {
         send(webhook, s"Humidity is too high! (${formatHumidity(tph.hum)})")
       }
-      _ <- IO.whenA(co2.co2 > co2UpperThreshold) {
+      _ <- IO.whenA(co2.co2 > Co2UpperThreshold) {
         send(webhook, s"CO2 is too high! (${formatCo2(co2.co2)})")
       }
     } yield ()
