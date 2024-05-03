@@ -13,7 +13,7 @@ import org.eclipse.jetty.util.thread.QueuedThreadPool
 import org.slf4j.LoggerFactory
 import rip.deadcode.sandbox_pi.build_info.BuildInfo
 import rip.deadcode.sandbox_pi.db.{createDataSource, createJdbi, setupFlyway}
-import rip.deadcode.sandbox_pi.http.HttpResponse.{JsonHttpResponse, StringHttpResponse}
+import rip.deadcode.sandbox_pi.http.HttpResponse.{JsonHttpResponse, StringHttpResponse, NoContentHttpResponse}
 import rip.deadcode.sandbox_pi.http.handler.environment.EnvironmentHandler
 import rip.deadcode.sandbox_pi.http.handler.helloworld.HelloWorldHandler
 import rip.deadcode.sandbox_pi.http.handler.led.LedHandler
@@ -123,6 +123,8 @@ def runServer(): Unit = {
           response.setContentType(MediaType.JSON_UTF_8.toString)
           import io.circe.syntax.*
           response.getWriter.print(e.encode)
+        case NoContentHttpResponse(_) =>
+          ()
       }
       baseRequest.setHandled(true)
     }

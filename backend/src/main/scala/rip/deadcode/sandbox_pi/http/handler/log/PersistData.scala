@@ -8,7 +8,7 @@ import rip.deadcode.sandbox_pi.http.handler.log.LogException.InvalidParameter
 import scala.concurrent.Future
 
 @Singleton
-class PersistData @Inject() (writeStats: WriteStats) {
+private[log] class PersistData @Inject() (writeStats: WriteStats) {
 
   def persist(input: LogInput): IO[Unit] = {
     import cats.syntax.traverse.*
