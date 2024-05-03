@@ -31,6 +31,12 @@ object HttpResponse {
     }
   }
 
+  case class NoContentHttpResponse(
+      header: Map[String, String] = Map.empty
+  ) extends HttpResponse {
+    override val status = 204
+  }
+
   object JsonHttpResponse {
 
     def invalidParameter(param: String): JsonHttpResponse[InvalidParameter] = JsonHttpResponse(

@@ -6,6 +6,7 @@ import rip.deadcode.sandbox_pi.http.handler.environment.EnvironmentHandler
 import rip.deadcode.sandbox_pi.http.handler.helloworld.HelloWorldHandler
 import rip.deadcode.sandbox_pi.http.handler.history.HistoryHandler
 import rip.deadcode.sandbox_pi.http.handler.led.LedHandler
+import rip.deadcode.sandbox_pi.http.handler.logger.LoggerHandler
 import rip.deadcode.sandbox_pi.http.handler.pi_temperature.PiTemperatureHandler
 import rip.deadcode.sandbox_pi.http.handler.stat.StatHandler
 import rip.deadcode.sandbox_pi.http.handler.status.StatusHandler
@@ -22,6 +23,7 @@ class Handlers @Inject() (
     statHandler: StatHandler,
     piTemperatureHandler: PiTemperatureHandler,
     arpHandler: ArpHandler,
+    loggerHandler: LoggerHandler,
     uiHandler: UiHandler,
     uiClassicHandler: UiClassicHandler
 ) {
@@ -35,6 +37,7 @@ class Handlers @Inject() (
     statHandler,
     piTemperatureHandler,
     arpHandler,
+    loggerHandler,
     uiHandler,
     uiClassicHandler
   )
