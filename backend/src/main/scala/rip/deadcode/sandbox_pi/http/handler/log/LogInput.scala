@@ -18,6 +18,7 @@ object LogInput {
 
   case class LogItem(
       target: String,
+      roomId: String,
       value: String,
       timestamp: ZonedDateTime
   )

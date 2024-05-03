@@ -7,12 +7,13 @@ import rip.deadcode.sandbox_pi.http.handler.history.HistoryOutput.HistoryValue
 import rip.deadcode.sandbox_pi.http.handler.history.Reader.{Summary, toOutput}
 import rip.deadcode.sandbox_pi.utils.{avg, formatCo2, formatHumidity, formatPressure, formatTemperature, med}
 
+import java.util.UUID
 import scala.jdk.CollectionConverters.*
 
 @Singleton
 private[history] class Reader @Inject() (jdbi: Jdbi) {
 
-  def readMonth(y: Int, mo: Int): HistoryOutput = {
+  def readMonth(roomId: UUID, y: Int, mo: Int): HistoryOutput = {
     val values = Tables
       .map { table =>
         jdbi
@@ -22,9 +23,10 @@ private[history] class Reader @Inject() (jdbi: Jdbi) {
               .createQuery(
                 s"""select value, year, month, day, hour, minute
                    |from $table
-                   |where year = :year and month = :month
+                   |where room_id = :room_id and year = :year and month = :month
                    |""".stripMargin
               )
+              .bind("room_id", roomId)
               .bind("year", y)
               .bind("month", mo)
               .mapTo(classOf[EnvSample])
@@ -42,7 +44,7 @@ private[history] class Reader @Inject() (jdbi: Jdbi) {
     toOutput(temperature, pressure, humidity, co2)
   }
 
-  def readDay(y: Int, mo: Int, d: Int): HistoryOutput = {
+  def readDay(roomId: UUID, y: Int, mo: Int, d: Int): HistoryOutput = {
     val values = Tables
       .map { table =>
         jdbi.inTransaction { handle =>
@@ -51,9 +53,10 @@ private[history] class Reader @Inject() (jdbi: Jdbi) {
             .createQuery(
               s"""select value, year, month, day, hour, minute
                |from $table
-               |where year = :year and month = :month and day = :day
+               |where room_id = :room_id and year = :year and month = :month and day = :day
                |""".stripMargin
             )
+            .bind("room_id", roomId)
             .bind("year", y)
             .bind("month", mo)
             .bind("day", d)
@@ -72,7 +75,7 @@ private[history] class Reader @Inject() (jdbi: Jdbi) {
     toOutput(temperature, pressure, humidity, co2)
   }
 
-  def readHour(y: Int, mo: Int, d: Int, h: Int): HistoryOutput = {
+  def readHour(roomId: UUID, y: Int, mo: Int, d: Int, h: Int): HistoryOutput = {
     val values = Tables
       .map { table =>
         jdbi.inTransaction { handle =>
@@ -81,9 +84,10 @@ private[history] class Reader @Inject() (jdbi: Jdbi) {
             .createQuery(
               s"""select value, year, month, day, hour, minute
                  |from $table
-                 |where year = :year and month = :month and day = :day and hour = :hour
+                 |where room_id = :room_id and year = :year and month = :month and day = :day and hour = :hour
                  |""".stripMargin
             )
+            .bind("room_id", roomId)
             .bind("year", y)
             .bind("month", mo)
             .bind("day", d)

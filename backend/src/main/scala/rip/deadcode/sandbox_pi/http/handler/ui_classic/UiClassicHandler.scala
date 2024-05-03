@@ -72,7 +72,7 @@ private object UiClassicHandler {
       |  </div>
       |  <script>
       |    document.addEventListener("DOMContentLoaded", () => {
-      |      fetch("/stat?p=day").then(response => {
+      |      fetch("/stat?room_id=57c91c78-99db-49fe-ae88-f9ef723aca9b&p=day").then(response => {
       |        if (response.ok) {
       |          return response.json()
       |        } else {

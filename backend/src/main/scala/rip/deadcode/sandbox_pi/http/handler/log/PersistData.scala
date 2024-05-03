@@ -5,6 +5,7 @@ import com.google.inject.{Inject, Singleton}
 import rip.deadcode.sandbox_pi.db.writer.WriteStats
 import rip.deadcode.sandbox_pi.http.handler.log.LogException.InvalidParameter
 
+import java.util.UUID
 import scala.concurrent.Future
 
 @Singleton
@@ -15,6 +16,7 @@ class PersistData @Inject() (writeStats: WriteStats) {
     input.items.traverse { i =>
       writeStats.write(
         i.target,
+        UUID.fromString(i.roomId), // TODO validation
         i.value,
         i.timestamp.getYear,
         i.timestamp.getMonthValue,

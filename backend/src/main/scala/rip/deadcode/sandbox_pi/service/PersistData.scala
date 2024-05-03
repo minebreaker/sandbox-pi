@@ -8,9 +8,11 @@ import rip.deadcode.sandbox_pi.db.model.EnvSample
 import rip.deadcode.sandbox_pi.db.writer.WriteStats
 import rip.deadcode.sandbox_pi.pi.bm680.Bme680Output
 import rip.deadcode.sandbox_pi.pi.mhz19c.Mhz19cOutput
+import rip.deadcode.sandbox_pi.service.PersistData.DefaultRoomId
 import rip.deadcode.sandbox_pi.utils.{avg, med}
 
 import java.time.{Clock, Instant, ZonedDateTime}
+import java.util.UUID
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
 import scala.math.Ordered.orderingToOrdered
@@ -32,7 +34,7 @@ private[service] class PersistData @Inject() (clock: Clock, writeStats: WriteSta
         ("humidity", tph.hum.toString),
         ("co2", co2.co2.toString)
       ).map { (table, value) =>
-        writeStats.write(table, value, tphY, tphMo, tphD, tphH, tphMi)
+        writeStats.write(table, DefaultRoomId, value, tphY, tphMo, tphD, tphH, tphMi)
       }.sequence
     } yield ()
   }
@@ -41,4 +43,9 @@ private[service] class PersistData @Inject() (clock: Clock, writeStats: WriteSta
     val dt = ZonedDateTime.ofInstant(ts, clock.getZone)
     (dt, dt.getYear, dt.getMonthValue, dt.getDayOfMonth, dt.getHour, dt.getMinute)
   }
+}
+
+object PersistData {
+  // We'll decouple sensors and the server, so this is a good-enough workaround fixed value.
+  private val DefaultRoomId = UUID.fromString("57c91c78-99db-49fe-ae88-f9ef723aca9b")
 }

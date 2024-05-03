@@ -4,10 +4,9 @@
 services:
   db:
     image: postgres:16
-    restart: unless-stopped
+    restart: no
     environment:
       POSTGRES_PASSWORD: changeme
       POSTGRES_DB: sandbox-pi
     ports:
-      #      - "8180:5432"
-      - 5432:5432
+      - 8180:5432

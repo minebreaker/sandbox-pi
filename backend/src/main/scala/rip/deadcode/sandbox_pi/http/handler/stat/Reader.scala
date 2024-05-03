@@ -9,12 +9,13 @@ import rip.deadcode.sandbox_pi.utils.{avg, formatCo2, formatHumidity, formatPres
 
 import java.time.format.DateTimeFormatter
 import java.time.{Clock, LocalDate, LocalDateTime, ZonedDateTime}
+import java.util.UUID
 import scala.jdk.CollectionConverters.*
 
 @Singleton
 private[stat] class Reader @Inject() (jdbi: Jdbi, clock: Clock) {
 
-  def readHour(): StatOutput = {
+  def readHour(roomId: UUID): StatOutput = {
     val now = ZonedDateTime.now(clock)
     val y = now.getYear
     val mo = now.getMonthValue
@@ -30,9 +31,10 @@ private[stat] class Reader @Inject() (jdbi: Jdbi, clock: Clock) {
               .createQuery(
                 s"""select value, year, month, day, hour, minute
                    |from $table
-                   |where year = :year and month = :month and day = :day and hour = :hour
+                   |where room_id = :room_id and year = :year and month = :month and day = :day and hour = :hour
                    |""".stripMargin
               )
+              .bind("room_id", roomId)
               .bind("year", y)
               .bind("month", mo)
               .bind("day", d)
@@ -62,7 +64,7 @@ private[stat] class Reader @Inject() (jdbi: Jdbi, clock: Clock) {
     toOutput(temperature, pressure, humidity, co2)
   }
 
-  def readDay(): StatOutput = {
+  def readDay(roomId: UUID): StatOutput = {
     val now = ZonedDateTime.now(clock)
     val y = now.getYear
     val mo = now.getMonthValue
@@ -77,9 +79,10 @@ private[stat] class Reader @Inject() (jdbi: Jdbi, clock: Clock) {
               .createQuery(
                 s"""select value, year, month, day, hour, minute
                    |from $table
-                   |where year = :year and month = :month and day = :day
+                   |where room_id = :room_id year = :year and month = :month and day = :day
                    |""".stripMargin
               )
+              .bind("room_id", roomId)
               .bind("year", y)
               .bind("month", mo)
               .bind("day", d)
@@ -108,7 +111,7 @@ private[stat] class Reader @Inject() (jdbi: Jdbi, clock: Clock) {
     toOutput(temperature, pressure, humidity, co2)
   }
 
-  def read7Days(): StatOutput = {
+  def read7Days(roomId: UUID): StatOutput = {
     val now = ZonedDateTime.now(clock)
     val tY = now.getYear
     val tMo = now.getMonthValue
@@ -128,6 +131,7 @@ private[stat] class Reader @Inject() (jdbi: Jdbi, clock: Clock) {
                 s"""select value, year, month, day, hour, minute
                    |from $table
                    |where
+                   |  room_id = :room_id and
                    |  case
                    |    when :t_month = :f_month then
                    |      year = :t_year and month = :t_month and day <= :t_day and day >= :f_day
@@ -140,6 +144,7 @@ private[stat] class Reader @Inject() (jdbi: Jdbi, clock: Clock) {
                    |  end
                    |""".stripMargin
               )
+              .bind("room_id", roomId)
               .bind("t_year", tY)
               .bind("t_month", tMo)
               .bind("t_day", tD)
@@ -171,7 +176,7 @@ private[stat] class Reader @Inject() (jdbi: Jdbi, clock: Clock) {
     toOutput(temperature, pressure, humidity, co2)
   }
 
-  def readMonth(): StatOutput = {
+  def readMonth(roomId: UUID): StatOutput = {
     val now = ZonedDateTime.now(clock)
     val y = now.getYear
     val mo = now.getMonthValue
@@ -185,9 +190,10 @@ private[stat] class Reader @Inject() (jdbi: Jdbi, clock: Clock) {
               .createQuery(
                 s"""select value, year, month, day, hour, minute
                    |from $table
-                   |where year = :year and month = :month
+                   |where room_id = :room_id and year = :year and month = :month
                    |""".stripMargin
               )
+              .bind("room_id", roomId)
               .bind("year", y)
               .bind("month", mo)
               .mapTo(classOf[EnvSample])
