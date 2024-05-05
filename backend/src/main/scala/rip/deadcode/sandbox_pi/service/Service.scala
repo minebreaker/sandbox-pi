@@ -62,7 +62,7 @@ class Service @Inject() (
               _ <- persistData.persist(tph, co2)
             } yield ()
           }
-          every(30.seconds, "Discord notification") {
+          every(30.minutes, "Discord notification") {
             discord.run()
           }
         }
