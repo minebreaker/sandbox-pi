@@ -79,7 +79,7 @@ private[stat] class Reader @Inject() (jdbi: Jdbi, clock: Clock) {
               .createQuery(
                 s"""select value, year, month, day, hour, minute
                    |from $table
-                   |where room_id = :room_id year = :year and month = :month and day = :day
+                   |where room_id = :room_id and year = :year and month = :month and day = :day
                    |""".stripMargin
               )
               .bind("room_id", roomId)
