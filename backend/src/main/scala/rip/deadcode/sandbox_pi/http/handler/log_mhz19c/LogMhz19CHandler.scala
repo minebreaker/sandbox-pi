@@ -7,6 +7,7 @@ import org.eclipse.jetty.server.Request
 import rip.deadcode.sandbox_pi.http.HttpResponse.NoContentHttpResponse
 import rip.deadcode.sandbox_pi.http.handler.log.LogInput
 import rip.deadcode.sandbox_pi.http.{HttpHandler, HttpResponse}
+import rip.deadcode.sandbox_pi.lib.cats.Validations.toIO
 import rip.deadcode.sandbox_pi.lib.circe.parseJson
 
 import scala.util.matching.compat.Regex
@@ -21,10 +22,7 @@ class LogMhz19CHandler @Inject() (processData: ProcessData) extends HttpHandler 
   override def handle(request: Request): IO[HttpResponse] = {
     for {
       input <- parseJson[LogMhz19CInput](request)
-      _ <- validateInput(input) match {
-        case Validated.Valid(_)   => IO.unit
-        case Validated.Invalid(e) => IO.raiseError(???)
-      }
+      _ <- validateInput(input).toIO
 
       _ <- processData.run(input)
     } yield NoContentHttpResponse()

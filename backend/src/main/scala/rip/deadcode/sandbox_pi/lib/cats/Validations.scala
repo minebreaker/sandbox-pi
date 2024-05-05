@@ -1,10 +1,29 @@
-package rip.deadcode.sandbox_pi.lib
+package rip.deadcode.sandbox_pi.lib.cats
 
+import cats.Monoid
 import cats.data.{Validated, ValidatedNel}
+import cats.effect.IO
+import cats.kernel.Semigroup
 
 import java.util.UUID
 
 object Validations {
+
+  extension [E, A](self: ValidatedNel[E, A]) {
+    def toIO: IO[A] = {
+      // TODO: reconsider impls when refactor input validations
+      self.leftMap(ee => Exception(ee.toList.mkString("multiple validation failures\n", "\n", ""))) match {
+        case Validated.Valid(a)   => IO(a)
+        case Validated.Invalid(e) => IO.raiseError(e)
+      }
+    }
+  }
+
+//  extension [E <: Exception, EE <: NonEmptyList[E], A](self: Validated[EE, A]) {
+//    def nelToIO: IO[A] = {
+//      ???
+//    }
+//  }
 
   def validateOptionInt(i: Option[String], param: => String): ValidatedNel[String, Option[Int]] = {
     i match {

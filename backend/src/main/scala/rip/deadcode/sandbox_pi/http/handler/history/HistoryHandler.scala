@@ -7,7 +7,7 @@ import org.eclipse.jetty.server.Request
 import rip.deadcode.sandbox_pi.http.HttpResponse.JsonHttpResponse
 import rip.deadcode.sandbox_pi.http.handler.history.HistoryException.InvalidParameter
 import rip.deadcode.sandbox_pi.http.{HttpHandler, HttpResponse}
-import rip.deadcode.sandbox_pi.lib.Validations.*
+import rip.deadcode.sandbox_pi.lib.cats.Validations.*
 
 import java.util.UUID
 import scala.util.matching.compat.Regex

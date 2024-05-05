@@ -7,6 +7,7 @@ import org.eclipse.jetty.server.Request
 import rip.deadcode.sandbox_pi.http.HttpResponse.JsonHttpResponse
 import rip.deadcode.sandbox_pi.http.handler.log.LogHandler.ValidTables
 import rip.deadcode.sandbox_pi.http.{HttpHandler, HttpResponse}
+import rip.deadcode.sandbox_pi.lib.cats.Validations.toIO
 import rip.deadcode.sandbox_pi.lib.circe.parseJson
 
 import java.io.InputStreamReader
@@ -25,10 +26,7 @@ class LogHandler @Inject() (
 
     for {
       input <- parseJson[LogInput](request)
-      _ <- validateInput(input) match {
-        case Validated.Valid(_)   => IO.unit
-        case Validated.Invalid(e) => IO.raiseError(???)
-      }
+      _ <- validateInput(input).toIO
 
       _ <- persistData.persist(input)
     } yield JsonHttpResponse(

@@ -7,6 +7,7 @@ import org.eclipse.jetty.server.Request
 import rip.deadcode.sandbox_pi.http.HttpResponse.NoContentHttpResponse
 import rip.deadcode.sandbox_pi.http.handler.log.LogInput
 import rip.deadcode.sandbox_pi.http.{HttpHandler, HttpResponse}
+import rip.deadcode.sandbox_pi.lib.cats.Validations.toIO
 import rip.deadcode.sandbox_pi.lib.circe.parseJson
 
 import scala.util.matching.compat.Regex
@@ -21,10 +22,7 @@ class LoggerHandler @Inject() (persistData: PersistData) extends HttpHandler {
   override def handle(request: Request): IO[HttpResponse] = {
     for {
       input <- parseJson[LoggerInput](request)
-      _ <- validateInput(input) match {
-        case Validated.Valid(a)   => IO.unit
-        case Validated.Invalid(e) => IO.raiseError(???)
-      }
+      _ <- validateInput(input).toIO
 
       _ <- persistData.write(input)
     } yield NoContentHttpResponse()

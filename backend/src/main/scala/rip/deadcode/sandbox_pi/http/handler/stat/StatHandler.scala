@@ -8,7 +8,7 @@ import rip.deadcode.sandbox_pi.http.HttpResponse.JsonHttpResponse
 import rip.deadcode.sandbox_pi.http.handler.history.Reader
 import rip.deadcode.sandbox_pi.http.handler.stat.StatException.InvalidParameter
 import rip.deadcode.sandbox_pi.http.{HttpHandler, HttpResponse}
-import rip.deadcode.sandbox_pi.lib.Validations.*
+import rip.deadcode.sandbox_pi.lib.cats.Validations.*
 
 import scala.util.matching.compat.Regex
 
