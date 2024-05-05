@@ -2,12 +2,12 @@ package rip.deadcode.sandbox_pi.http.handler.log
 
 import cats.data.{Validated, ValidatedNel}
 import cats.effect.IO
-import com.google.common.io.CharStreams
 import com.google.inject.{Inject, Singleton}
 import org.eclipse.jetty.server.Request
 import rip.deadcode.sandbox_pi.http.HttpResponse.JsonHttpResponse
 import rip.deadcode.sandbox_pi.http.handler.log.LogHandler.ValidTables
 import rip.deadcode.sandbox_pi.http.{HttpHandler, HttpResponse}
+import rip.deadcode.sandbox_pi.lib.circe.parseJson
 
 import java.io.InputStreamReader
 import scala.util.matching.compat.Regex
@@ -24,14 +24,7 @@ class LogHandler @Inject() (
   override def handle(request: Request): IO[HttpResponse] = {
 
     for {
-      input <- IO.fromEither {
-        val inputStr = CharStreams.toString(request.getReader)
-        import io.circe.syntax.*
-        for {
-          json <- io.circe.parser.parse(inputStr)
-          input <- json.as[LogInput]
-        } yield input
-      }
+      input <- parseJson[LogInput](request)
       _ <- validateInput(input) match {
         case Validated.Valid(_)   => IO.unit
         case Validated.Invalid(e) => IO.raiseError(???)
