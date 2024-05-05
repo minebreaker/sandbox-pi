@@ -1,17 +1,10 @@
-insert into temperature
-values (30,
-        2024,
-        5,
-        2,
-        0,
-        0);
-
 create table room (
     id   uuid primary key,
     name text not null
 );
 insert into room
-values ('57c91c78-99db-49fe-ae88-f9ef723aca9b', 'リビング');
+values ('57c91c78-99db-49fe-ae88-f9ef723aca9b', 'リビング'),
+    ('074c9520-05de-4ae1-89c7-7530baa85828', 'ESP32 #0');
 
 alter table temperature
 drop constraint temperature_pkey;

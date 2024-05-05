@@ -6,6 +6,8 @@ import rip.deadcode.sandbox_pi.http.handler.environment.EnvironmentHandler
 import rip.deadcode.sandbox_pi.http.handler.helloworld.HelloWorldHandler
 import rip.deadcode.sandbox_pi.http.handler.history.HistoryHandler
 import rip.deadcode.sandbox_pi.http.handler.led.LedHandler
+import rip.deadcode.sandbox_pi.http.handler.log.LogHandler
+import rip.deadcode.sandbox_pi.http.handler.log_mhz19c.LogMhz19CHandler
 import rip.deadcode.sandbox_pi.http.handler.logger.LoggerHandler
 import rip.deadcode.sandbox_pi.http.handler.pi_temperature.PiTemperatureHandler
 import rip.deadcode.sandbox_pi.http.handler.stat.StatHandler
@@ -17,21 +19,29 @@ import rip.deadcode.sandbox_pi.http.handler.ui_classic.UiClassicHandler
 class Handlers @Inject() (
     helloWorldHandler: HelloWorldHandler,
     statusHandler: StatusHandler,
+
+    // Hardware related
     ledHandler: LedHandler,
+    logHandler: LogHandler,
+    logMhz19CHandler: LogMhz19CHandler,
     environmentHandler: EnvironmentHandler,
     historyHandler: HistoryHandler,
     statHandler: StatHandler,
     piTemperatureHandler: PiTemperatureHandler,
     arpHandler: ArpHandler,
     loggerHandler: LoggerHandler,
+
+    // UI
     uiHandler: UiHandler,
     uiClassicHandler: UiClassicHandler
 ) {
 
   val handlers: Seq[HttpHandler] = Seq(
     helloWorldHandler,
-    statHandler,
+    statusHandler,
     ledHandler,
+    logHandler,
+    logMhz19CHandler,
     environmentHandler,
     historyHandler,
     statHandler,

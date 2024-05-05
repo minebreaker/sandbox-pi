@@ -87,6 +87,11 @@ class Mhz19c @Inject() (pi4j: Pi4JContext, clock: Clock) {
 
     logger.debug(show(result.array()))
 
+    processData(result)
+  }
+
+  def processData(result: ByteBuffer): Int = {
+
     val higher = result.get(2).toUnsigned
     val lower = result.get(3).toUnsigned
 
@@ -95,7 +100,10 @@ class Mhz19c @Inject() (pi4j: Pi4JContext, clock: Clock) {
 
     val concentration = higher * 256 + lower
     logger.info("CO2(ppm): {}", concentration)
-    logger.info("Checksum received: {}, calculated: {}", receivedChecksum, calculatedChecksum)
+
+    if (receivedChecksum != calculatedChecksum) {
+      throw new Exception(s"Checksum did not match. received: $receivedChecksum, calculated: $calculatedChecksum")
+    }
 
     concentration
   }
