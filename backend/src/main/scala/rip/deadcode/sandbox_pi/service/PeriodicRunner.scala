@@ -44,9 +44,9 @@ class PeriodicRunner @Inject() (clock: Clock) {
             } *> io
           } else {
             io
-          }.recoverWith { _ =>
+          }.recoverWith { e =>
             IO {
-              logger.warn(s"Task failed. label: ${}")
+              logger.warn(s"Task failed. label: $label", e)
             }
           }
         }

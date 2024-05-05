@@ -11,7 +11,7 @@ import java.time.Clock
 import java.util.{Base64, UUID}
 
 @Singleton
-class ProcessData @Inject() (mhz19c: Mhz19c, clock: Clock, writeStats: WriteStats) {
+private[log_mhz19c] class ProcessData @Inject() (mhz19c: Mhz19c, clock: Clock, writeStats: WriteStats) {
 
   def run(input: LogMhz19CInput): IO[Unit] = {
     for {

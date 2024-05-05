@@ -4,7 +4,7 @@ import com.google.inject.{Inject, Singleton}
 import com.pi4j.context.Context as Pi4JContext
 import com.pi4j.io.i2c.{I2C, I2CProvider}
 import org.slf4j.LoggerFactory
-import rip.deadcode.sandbox_pi.pi.bm680.Device.Data
+import rip.deadcode.sandbox_pi.pi.bm680.Bme680.{CalibrationData, Data}
 import rip.deadcode.sandbox_pi.utils.*
 
 import java.nio.ByteBuffer
@@ -38,6 +38,21 @@ class Bme680 @Inject() (pi4j: Pi4JContext, clock: Clock) {
       output
     }
   }
+
+  // FIXME refactor
+  def processCalibrationData(
+      parT1B: ByteBuffer,
+      parT2T3B: ByteBuffer,
+      parPB: ByteBuffer,
+      parHB: ByteBuffer
+  ): CalibrationData = device.processCalibrationData(parT1B, parT2T3B, parPB, parHB)
+
+  def processData(
+      calibrationData: CalibrationData,
+      tempAdcB: ByteBuffer,
+      pressAdcB: ByteBuffer,
+      humAdcB: ByteBuffer
+  ): Data = device.processData(calibrationData, tempAdcB, pressAdcB, humAdcB)
 }
 
 private[bm680] class Device(pi4j: Pi4JContext) {
@@ -59,28 +74,7 @@ private[bm680] class Device(pi4j: Pi4JContext) {
   private val CtrlHumAddr = 0x72
   private val CtrlMeasAddr = 0x74
 
-  private var parT1: Double = 0
-  private var parT2: Double = 0
-  private var parT3: Double = 0
-
-  private var parP1: Double = 0
-  private var parP2: Double = 0
-  private var parP3: Double = 0
-  private var parP4: Double = 0
-  private var parP5: Double = 0
-  private var parP6: Double = 0
-  private var parP7: Double = 0
-  private var parP8: Double = 0
-  private var parP9: Double = 0
-  private var parP10: Double = 0
-
-  private var parH1: Double = 0
-  private var parH2: Double = 0
-  private var parH3: Double = 0
-  private var parH4: Double = 0
-  private var parH5: Double = 0
-  private var parH6: Double = 0
-  private var parH7: Double = 0
+  private var calibrationData: Option[CalibrationData] = None
 
   // initialization
   {
@@ -93,61 +87,30 @@ private[bm680] class Device(pi4j: Pi4JContext) {
     // Temperature calibration
     val parT1B = i2c.readRegisterByteBuffer(0xE9, 2)
     val parT2T3B = i2c.readRegisterByteBuffer(0x8A, 3)
-    parT1 = ByteBuffer.allocate(2).put(parT1B.get(1)).put(parT1B.get(0)).getShort(0).toUnsignedDouble
-    parT2 = ByteBuffer.allocate(2).put(parT2T3B.get(1)).put(parT2T3B.get(0)).getShort(0).toDouble
-    parT3 = parT2T3B.get(2).toDouble
-
+    logger.debug("par_t")
     logger.debug(show(parT1B.array()))
     logger.debug(show(parT2T3B.array()))
-    logger.debug("par_t1 {}", parT1)
-    logger.debug("par_t2 {}", parT2)
-    logger.debug("par_t3 {}", parT3)
 
     // Pressure calibration
     // Read from 0x82 to 0xA0
     val parPB = i2c.readRegisterByteBuffer(0x8E, 19)
-    parP1 = ByteBuffer.allocate(4).position(2).put(parPB.get(1)).put(parPB.get(0)).getInt(0).toUnsignedDouble
-    parP2 = ByteBuffer.allocate(2).put(parPB.get(3)).put(parPB.get(2)).getShort(0).toDouble
-    parP3 = parPB.get(4).toDouble
-    parP4 = ByteBuffer.allocate(2).put(parPB.get(7)).put(parPB.get(6)).getShort(0).toDouble
-    parP5 = ByteBuffer.allocate(2).put(parPB.get(9)).put(parPB.get(8)).getShort(0).toDouble
-    parP6 = parPB.get(11).toDouble
-    parP7 = parPB.get(10).toDouble
-    parP8 = ByteBuffer.allocate(2).put(parPB.get(15)).put(parPB.get(14)).getShort(0).toDouble
-    parP9 = ByteBuffer.allocate(2).put(parPB.get(17)).put(parPB.get(16)).getShort(0).toDouble
-    parP10 = parPB.get(18).toUnsignedDouble
-
+    logger.debug("par_p")
     logger.debug(show(parPB.array()))
-    logger.debug("par_p1 {}", parP1)
-    logger.debug("par_p2 {}", parP2)
-    logger.debug("par_p3 {}", parP3)
-    logger.debug("par_p4 {}", parP4)
-    logger.debug("par_p5 {}", parP5)
-    logger.debug("par_p6 {}", parP6)
-    logger.debug("par_p7 {}", parP7)
-    logger.debug("par_p8 {}", parP8)
-    logger.debug("par_p9 {}", parP9)
-    logger.debug("par_p10 {}", parP10)
 
+    // Humidity calibration
     val parHB = i2c.readRegisterByteBuffer(0xE1, 8)
-    val parH1B = ByteBuffer.allocate(2).put(parHB.get(2)).put((parHB.get(1) << 4).toByte)
-    parH1 = (parH1B.getShort(0) >> 4).toUnsignedDouble
-    val parH2B = ByteBuffer.allocate(2).put(parHB.get(0)).put((parHB.get(1) << 4).toByte)
-    parH2 = (parH2B.getShort(0) >> 4).toUnsignedDouble
-    parH3 = parHB.get(3).toDouble
-    parH4 = parHB.get(4).toDouble
-    parH5 = parHB.get(5).toDouble
-    parH6 = parHB.get(6).toUnsignedDouble
-    parH7 = parHB.get(7).toDouble
-
+    logger.debug("par_h")
     logger.debug(show(parHB.array()))
-    logger.debug("par_h1 {}", parH1)
-    logger.debug("par_h2 {}", parH2)
-    logger.debug("par_h3 {}", parH3)
-    logger.debug("par_h4 {}", parH4)
-    logger.debug("par_h5 {}", parH5)
-    logger.debug("par_h6 {}", parH6)
-    logger.debug("par_h7 {}", parH7)
+
+    calibrationData = Some(
+      processCalibrationData(
+        parT1B,
+        parT2T3B,
+        parPB,
+        parHB
+      )
+    )
+    logger.debug("{}", calibrationData)
   }
 
   def readData(): Data = {
@@ -185,16 +148,101 @@ private[bm680] class Device(pi4j: Pi4JContext) {
       }
     }
 
+    val calibrationData = this.calibrationData.getOrElse(???)
+
     // TODO: register bulk read
+    val tempAdc = {
+      val tempAdcB = i2c.readRegisterByteBuffer(0x22, 3)
+      logger.debug("temp_adc" + show(tempAdcB.array()))
+      tempAdcB
+    }
+    val pressAdc = {
+      val pressAdcB = i2c.readRegisterByteBuffer(0x1F, 3)
+      logger.debug("press_adc" + show(pressAdcB.array()))
+      pressAdcB
+    }
+    val humAdc = {
+      val humAdcB = i2c.readRegisterByteBuffer(0x25, 2)
+      logger.debug("hum_adc" + show(humAdcB.array()))
+      humAdcB
+    }
+
+    processData(calibrationData, tempAdc, pressAdc, humAdc)
+  }
+
+  def processCalibrationData(
+      parT1B: ByteBuffer,
+      parT2T3B: ByteBuffer,
+      parPB: ByteBuffer,
+      parHB: ByteBuffer
+  ): CalibrationData = {
+
+    val parT1 = ByteBuffer.allocate(2).put(parT1B.get(1)).put(parT1B.get(0)).getShort(0).toUnsignedDouble
+    val parT2 = ByteBuffer.allocate(2).put(parT2T3B.get(1)).put(parT2T3B.get(0)).getShort(0).toDouble
+    val parT3 = parT2T3B.get(2).toDouble
+
+    val parP1 = ByteBuffer.allocate(4).position(2).put(parPB.get(1)).put(parPB.get(0)).getInt(0).toUnsignedDouble
+    val parP2 = ByteBuffer.allocate(2).put(parPB.get(3)).put(parPB.get(2)).getShort(0).toDouble
+    val parP3 = parPB.get(4).toDouble
+    val parP4 = ByteBuffer.allocate(2).put(parPB.get(7)).put(parPB.get(6)).getShort(0).toDouble
+    val parP5 = ByteBuffer.allocate(2).put(parPB.get(9)).put(parPB.get(8)).getShort(0).toDouble
+    val parP6 = parPB.get(11).toDouble
+    val parP7 = parPB.get(10).toDouble
+    val parP8 = ByteBuffer.allocate(2).put(parPB.get(15)).put(parPB.get(14)).getShort(0).toDouble
+    val parP9 = ByteBuffer.allocate(2).put(parPB.get(17)).put(parPB.get(16)).getShort(0).toDouble
+    val parP10 = parPB.get(18).toUnsignedDouble
+
+    val parH1B = ByteBuffer.allocate(2).put(parHB.get(2)).put((parHB.get(1) << 4).toByte)
+    val parH1 = (parH1B.getShort(0) >> 4).toUnsignedDouble
+    val parH2B = ByteBuffer.allocate(2).put(parHB.get(0)).put((parHB.get(1) << 4).toByte)
+    val parH2 = (parH2B.getShort(0) >> 4).toUnsignedDouble
+    val parH3 = parHB.get(3).toDouble
+    val parH4 = parHB.get(4).toDouble
+    val parH5 = parHB.get(5).toDouble
+    val parH6 = parHB.get(6).toUnsignedDouble
+    val parH7 = parHB.get(7).toDouble
+
+    CalibrationData(
+      parT1,
+      parT2,
+      parT3,
+      parP1,
+      parP2,
+      parP3,
+      parP4,
+      parP5,
+      parP6,
+      parP7,
+      parP8,
+      parP9,
+      parP10,
+      parH1,
+      parH2,
+      parH3,
+      parH4,
+      parH5,
+      parH6,
+      parH7
+    )
+  }
+
+  def processData(
+      calibrationData: CalibrationData,
+      tempAdcB: ByteBuffer,
+      pressAdcB: ByteBuffer,
+      humAdcB: ByteBuffer
+  ): Data = {
+    import calibrationData.*
+
+    val tempAdc = (ByteBuffer.allocate(4).put(tempAdcB).getInt(0) >> 12).toUnsignedDouble
+    val pressAdc = (ByteBuffer.allocate(4).put(pressAdcB).getInt(0) >> 12).toUnsignedDouble
+    val humAdc = humAdcB.getShort(0).toUnsignedDouble
+
+    logger.debug("temp_adc:  " + tempAdc.toString)
+    logger.debug("press_adc: " + pressAdc.toString)
+    logger.debug("hum_adc:   " + humAdc.toString)
 
     val (tempComp, tFine) = {
-      val tempAdcB = ByteBuffer.allocate(4) // For easier read, allocates 4 bytes
-      i2c.readRegister(0x22, tempAdcB, 3)
-
-      val tempAdc = (tempAdcB.getInt(0) >> 12).toUnsignedDouble
-      logger.debug("temp_adc" + show(tempAdcB.array()))
-      logger.debug(tempAdc.toString)
-
       val var1 = ((tempAdc / 16384) - (parT1 / 1024)) * parT2
       val var2 = (((tempAdc / 131072) - (parT1 / 8192)) * ((tempAdc / 131072) - parT1 / 8192)) * (parT3 * 16)
       val tFine = var1 + var2
@@ -203,13 +251,6 @@ private[bm680] class Device(pi4j: Pi4JContext) {
     }
 
     val pressComp = {
-      val pressAdcB = ByteBuffer.allocate(4)
-      i2c.readRegister(0x1F, pressAdcB, 3)
-
-      val pressAdc = (pressAdcB.getInt(0) >> 12).toUnsignedDouble
-      logger.debug("press_adc" + show(pressAdcB.array()))
-      logger.debug(pressAdc.toString)
-
       var var1 = (tFine / 2) - 64000
       var var2 = var1 * var1 * (parP6 / 131072)
       var2 = var2 + (var1 * parP5 * 2)
@@ -231,12 +272,6 @@ private[bm680] class Device(pi4j: Pi4JContext) {
     }
 
     val humComp = {
-      val humAdcB = i2c.readRegisterByteBuffer(0x25, 2)
-
-      val humAdc = humAdcB.getShort(0).toUnsignedDouble
-      logger.debug("hum_adc" + show(humAdcB.array()))
-      logger.debug(humAdc.toString)
-
       val var1 = humAdc - ((parH1 * 16) + ((parH3 / 2) * tempComp))
       val var2 = var1 * (
         (parH2 / 262144) * (1 + ((parH4 / 16384) * tempComp) + ((parH5 / 1048576) * tempComp * tempComp))
@@ -267,12 +302,34 @@ private[bm680] class Device(pi4j: Pi4JContext) {
   }
 }
 
-object Device {
+object Bme680 {
+
+  case class CalibrationData(
+      parT1: Double,
+      parT2: Double,
+      parT3: Double,
+      parP1: Double,
+      parP2: Double,
+      parP3: Double,
+      parP4: Double,
+      parP5: Double,
+      parP6: Double,
+      parP7: Double,
+      parP8: Double,
+      parP9: Double,
+      parP10: Double,
+      parH1: Double,
+      parH2: Double,
+      parH3: Double,
+      parH4: Double,
+      parH5: Double,
+      parH6: Double,
+      parH7: Double
+  )
 
   case class Data(
       temp: Double,
       press: Double,
       hum: Double
   )
-
 }

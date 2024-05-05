@@ -7,6 +7,7 @@ import rip.deadcode.sandbox_pi.http.handler.helloworld.HelloWorldHandler
 import rip.deadcode.sandbox_pi.http.handler.history.HistoryHandler
 import rip.deadcode.sandbox_pi.http.handler.led.LedHandler
 import rip.deadcode.sandbox_pi.http.handler.log.LogHandler
+import rip.deadcode.sandbox_pi.http.handler.log_bme680.LogBme680Handler
 import rip.deadcode.sandbox_pi.http.handler.log_mhz19c.LogMhz19CHandler
 import rip.deadcode.sandbox_pi.http.handler.logger.LoggerHandler
 import rip.deadcode.sandbox_pi.http.handler.pi_temperature.PiTemperatureHandler
@@ -23,6 +24,7 @@ class Handlers @Inject() (
     // Hardware related
     ledHandler: LedHandler,
     logHandler: LogHandler,
+    logBme680Handler: LogBme680Handler,
     logMhz19CHandler: LogMhz19CHandler,
     environmentHandler: EnvironmentHandler,
     historyHandler: HistoryHandler,
@@ -41,6 +43,7 @@ class Handlers @Inject() (
     statusHandler,
     ledHandler,
     logHandler,
+    logBme680Handler,
     logMhz19CHandler,
     environmentHandler,
     historyHandler,
