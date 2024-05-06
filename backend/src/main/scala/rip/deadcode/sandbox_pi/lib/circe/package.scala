@@ -1,6 +1,6 @@
 package rip.deadcode.sandbox_pi.lib
 
-import cats.effect.IO
+import _root_.cats.effect.IO
 import com.google.common.io.CharStreams
 import io.circe.Decoder
 import org.eclipse.jetty.server.Request

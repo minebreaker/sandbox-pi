@@ -11,6 +11,7 @@ import rip.deadcode.sandbox_pi.http.handler.log_bme680.LogBme680Handler
 import rip.deadcode.sandbox_pi.http.handler.log_mhz19c.LogMhz19CHandler
 import rip.deadcode.sandbox_pi.http.handler.logger.LoggerHandler
 import rip.deadcode.sandbox_pi.http.handler.pi_temperature.PiTemperatureHandler
+import rip.deadcode.sandbox_pi.http.handler.room.ListRoomHandler
 import rip.deadcode.sandbox_pi.http.handler.stat.StatHandler
 import rip.deadcode.sandbox_pi.http.handler.status.StatusHandler
 import rip.deadcode.sandbox_pi.http.handler.ui.UiHandler
@@ -34,6 +35,7 @@ class Handlers @Inject() (
     loggerHandler: LoggerHandler,
 
     // UI
+    listRoomHandler: ListRoomHandler,
     uiHandler: UiHandler,
     uiClassicHandler: UiClassicHandler
 ) {
@@ -51,6 +53,7 @@ class Handlers @Inject() (
     piTemperatureHandler,
     arpHandler,
     loggerHandler,
+    listRoomHandler,
     uiHandler,
     uiClassicHandler
   )

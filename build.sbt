@@ -2,20 +2,7 @@ ThisBuild / version := "0.1.0-SNAPSHOT"
 ThisBuild / scalaVersion := "3.4.0"
 
 lazy val root = (project in file("."))
-  .aggregate(backend, frontend)
-
-val scalaJsSettings = scalaJSLinkerConfig ~= {
-  _.withModuleKind(ModuleKind.ESModule)
-    .withModuleSplitStyle(
-      org.scalajs.linker.interface.ModuleSplitStyle.SmallModulesFor(List("livechart"))
-    )
-}
-
-lazy val shared = (project in file("shared"))
-  .enablePlugins(ScalaJSPlugin)
-  .settings(
-    scalaJsSettings
-  )
+  .aggregate(backend)
 
 lazy val backend = (project in file("backend"))
   .enablePlugins(JavaAppPackaging)
@@ -74,26 +61,3 @@ lazy val backend = (project in file("backend"))
       case v => (assembly / assemblyMergeStrategy).value.apply(v)
     }
   )
-
-lazy val frontend = (project in file("frontend"))
-  .enablePlugins(
-    ScalaJSPlugin,
-    ScalablyTypedConverterExternalNpmPlugin
-  )
-  .settings(
-    name := "frontend",
-    scalaJSUseMainModuleInitializer := true,
-    mainClass := Some("rip.deadcode.sandbox_pi.frontend.Main"),
-    stFlavour := Flavour.Slinky,
-    externalNpm := {
-      scala.sys.process.Process("npm", baseDirectory.value).!
-      baseDirectory.value
-    },
-    scalaJsSettings,
-    libraryDependencies ++= Seq(
-      "org.scala-js" %%% "scalajs-dom" % "2.4.0",
-      "me.shadaj" %%% "slinky-core" % "0.7.3",
-      "me.shadaj" %%% "slinky-web" % "0.7.3"
-    )
-  )
-  .dependsOn(shared % "test->test;compile->compile")

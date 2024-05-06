@@ -38,7 +38,7 @@ object UiHandler {
   private val jsMap = Resources.toString(Resources.getResource("ui/main.js.map"), StandardCharsets.UTF_8)
 
   private val urlMap = Map(
-    "/ui/index.js" -> js,
-    "/ui/index.js.map" -> jsMap
+    "/ui/main.js" -> js,
+    "/ui/main.js.map" -> jsMap
   )
 }
