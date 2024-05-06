@@ -2,7 +2,7 @@ package rip.deadcode.sandbox_pi.http.handler.log_bme680
 
 import cats.effect.IO
 import com.google.inject.{Inject, Singleton}
-import rip.deadcode.sandbox_pi.db.writer.WriteStats
+import rip.deadcode.sandbox_pi.db.writer.StatsWriter
 import rip.deadcode.sandbox_pi.lib.time.timestampToTime
 import rip.deadcode.sandbox_pi.pi.bm680.Bme680
 import rip.deadcode.sandbox_pi.pi.mhz19c.Mhz19c
@@ -12,7 +12,7 @@ import java.time.Clock
 import java.util.{Base64, UUID}
 
 @Singleton
-private[log_bme680] class ProcessData @Inject() (bme680: Bme680, clock: Clock, writeStats: WriteStats) {
+private[log_bme680] class ProcessData @Inject() (bme680: Bme680, clock: Clock, writeStats: StatsWriter) {
 
   import cats.syntax.traverse.*
   def run(input: LogBme680Input): IO[Unit] = {

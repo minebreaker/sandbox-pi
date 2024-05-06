@@ -2,7 +2,7 @@ package rip.deadcode.sandbox_pi.http.handler.log_mhz19c
 
 import cats.effect.IO
 import com.google.inject.{Inject, Singleton}
-import rip.deadcode.sandbox_pi.db.writer.WriteStats
+import rip.deadcode.sandbox_pi.db.writer.StatsWriter
 import rip.deadcode.sandbox_pi.lib.time.timestampToTime
 import rip.deadcode.sandbox_pi.pi.mhz19c.Mhz19c
 
@@ -11,7 +11,7 @@ import java.time.Clock
 import java.util.{Base64, UUID}
 
 @Singleton
-private[log_mhz19c] class ProcessData @Inject() (mhz19c: Mhz19c, clock: Clock, writeStats: WriteStats) {
+private[log_mhz19c] class ProcessData @Inject() (mhz19c: Mhz19c, clock: Clock, writeStats: StatsWriter) {
 
   def run(input: LogMhz19CInput): IO[Unit] = {
     for {

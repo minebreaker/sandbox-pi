@@ -1,4 +1,4 @@
-package rip.deadcode.sandbox_pi.service
+package rip.deadcode.sandbox_pi.daemon
 
 import cats.effect.IO
 import cats.effect.unsafe.IORuntime
@@ -7,6 +7,7 @@ import com.google.inject.{Inject, Singleton}
 import org.slf4j.LoggerFactory
 import rip.deadcode.sandbox_pi.pi.bm680.Bme680
 import rip.deadcode.sandbox_pi.pi.mhz19c.Mhz19c
+import rip.deadcode.sandbox_pi.service.{Discord, PersistData}
 
 import java.time.{Clock, Instant}
 import java.util.concurrent.{ScheduledExecutorService, ScheduledThreadPoolExecutor, TimeUnit}
@@ -15,7 +16,7 @@ import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success}
 
 @Singleton
-class Service @Inject() (
+class DaemonMain @Inject() (
     bme680: Bme680,
     mhz19c: Mhz19c,
     persistData: PersistData,
@@ -26,7 +27,7 @@ class Service @Inject() (
   import scala.concurrent.duration.*
   import scala.jdk.DurationConverters.*
 
-  private val logger = LoggerFactory.getLogger(classOf[Service])
+  private val logger = LoggerFactory.getLogger(classOf[DaemonMain])
 
   private val PoolSize = 1
   private val Timeout = 10.seconds.toJava

@@ -19,7 +19,8 @@ import rip.deadcode.sandbox_pi.http.handler.helloworld.HelloWorldHandler
 import rip.deadcode.sandbox_pi.http.handler.led.LedHandler
 import rip.deadcode.sandbox_pi.http.handler.pi_temperature.PiTemperatureHandler
 import rip.deadcode.sandbox_pi.http.{Handlers, HttpHandler, HttpResponse, NotFoundHandler}
-import rip.deadcode.sandbox_pi.service.{Discord, Service}
+import rip.deadcode.sandbox_pi.daemon.DaemonMain
+import rip.deadcode.sandbox_pi.service.Discord
 
 import java.time.{ZoneId, ZoneOffset}
 import javax.sql.DataSource
@@ -72,7 +73,7 @@ def runServer(): Unit = {
   injector.getInstance(classOf[Discord]).sendStartupNotification().unsafeRunSync()
 
   // Start a daemon thread
-  val service = injector.getInstance(classOf[Service])
+  val service = injector.getInstance(classOf[DaemonMain])
   service.start()
 
   // Start the server

@@ -1,10 +1,10 @@
-package rip.deadcode.sandbox_pi.service
+package rip.deadcode.sandbox_pi.daemon
 
 import cats.effect.IO
 import cats.effect.unsafe.IORuntime
 import com.google.inject.{Inject, Singleton}
 import org.slf4j.LoggerFactory
-import rip.deadcode.sandbox_pi.service.PeriodicRunner.RunnableSpec
+import rip.deadcode.sandbox_pi.daemon.PeriodicRunner.RunnableSpec
 
 import java.time.{Clock, Instant}
 import scala.collection.mutable

@@ -12,9 +12,9 @@ import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
 
 @Singleton
-class WriteStats @Inject() (jdbi: Jdbi) {
+class StatsWriter @Inject()(jdbi: Jdbi) {
 
-  private val logger = LoggerFactory.getLogger(classOf[WriteStats])
+  private val logger = LoggerFactory.getLogger(classOf[StatsWriter])
 
   /** @param table
     *   This will not be sanitized. Be careful for SQL injection.

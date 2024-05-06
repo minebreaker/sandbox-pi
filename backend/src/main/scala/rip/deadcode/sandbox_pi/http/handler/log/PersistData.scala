@@ -2,14 +2,14 @@ package rip.deadcode.sandbox_pi.http.handler.log
 
 import cats.effect.IO
 import com.google.inject.{Inject, Singleton}
-import rip.deadcode.sandbox_pi.db.writer.WriteStats
+import rip.deadcode.sandbox_pi.db.writer.StatsWriter
 import rip.deadcode.sandbox_pi.http.handler.log.LogException.InvalidParameter
 
 import java.util.UUID
 import scala.concurrent.Future
 
 @Singleton
-private[log] class PersistData @Inject() (writeStats: WriteStats) {
+private[log] class PersistData @Inject() (writeStats: StatsWriter) {
 
   def persist(input: LogInput): IO[Unit] = {
     import cats.syntax.traverse.*
