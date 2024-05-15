@@ -1,4 +1,4 @@
-package rip.deadcode.sandbox_pi.http.handler.log_mhz19c
+package rip.deadcode.sandbox_pi.http.handler.log_tgs8100
 
 import cats.data.{Validated, ValidatedNel}
 import cats.effect.IO
@@ -12,23 +12,22 @@ import rip.deadcode.sandbox_pi.lib.circe.parseJson
 import scala.util.matching.compat.Regex
 
 @Singleton
-class LogMhz19CHandler @Inject() (processData: ProcessData) extends HttpHandler {
+class LogTgs8100Handler @Inject() (persistData: PersistData) extends HttpHandler {
 
-  override def url: Regex = "^/log/mhz19c$".r
+  override def url: Regex = "^/log/tgs8100$".r
 
   override def method: String = "POST"
 
   override def handle(request: Request): IO[HttpResponse] = {
     for {
-      input <- parseJson[LogMhz19CInput](request)
+      input <- parseJson[LogTgs8100Input](request)
       _ <- validateInput(input).toIO
 
-      _ <- processData.run(input)
+      _ <- persistData.run(input)
     } yield NoContentHttpResponse()
   }
 
-  private def validateInput(input: LogMhz19CInput): ValidatedNel[String, LogMhz19CInput] = {
-    // TODO
+  private def validateInput(input: LogTgs8100Input): ValidatedNel[String, LogTgs8100Input] = {
     Validated.validNel(input)
   }
 }

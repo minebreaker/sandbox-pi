@@ -8,7 +8,8 @@ case class StatOutput(
     temperature: Map[String, Option[StatValue]],
     pressure: Map[String, Option[StatValue]],
     humidity: Map[String, Option[StatValue]],
-    co2: Map[String, Option[StatValue]]
+    co2: Map[String, Option[StatValue]],
+    smell: Map[String, Option[StatValue]]
 )
 
 object StatOutput {

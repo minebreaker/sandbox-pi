@@ -60,8 +60,9 @@ private[stat] class Reader @Inject() (jdbi: Jdbi, clock: Clock) {
     val pressure = init ++ values(1)
     val humidity = init ++ values(2)
     val co2 = init ++ values(3)
+    val smell = init ++ values(4)
 
-    toOutput(temperature, pressure, humidity, co2)
+    toOutput(temperature, pressure, humidity, co2, smell)
   }
 
   def readDay(roomId: UUID): StatOutput = {
@@ -107,8 +108,9 @@ private[stat] class Reader @Inject() (jdbi: Jdbi, clock: Clock) {
     val pressure = init ++ values(1)
     val humidity = init ++ values(2)
     val co2 = init ++ values(3)
+    val smell = init ++ values(4)
 
-    toOutput(temperature, pressure, humidity, co2)
+    toOutput(temperature, pressure, humidity, co2, smell)
   }
 
   def read7Days(roomId: UUID): StatOutput = {
@@ -172,8 +174,9 @@ private[stat] class Reader @Inject() (jdbi: Jdbi, clock: Clock) {
     val pressure = values(1)
     val humidity = values(2)
     val co2 = values(3)
+    val smell = values(4)
 
-    toOutput(temperature, pressure, humidity, co2)
+    toOutput(temperature, pressure, humidity, co2, smell)
   }
 
   def readMonth(roomId: UUID): StatOutput = {
@@ -216,15 +219,17 @@ private[stat] class Reader @Inject() (jdbi: Jdbi, clock: Clock) {
     val pressure = values(1)
     val humidity = values(2)
     val co2 = values(3)
+    val smell = values(4)
 
-    toOutput(temperature, pressure, humidity, co2)
+    toOutput(temperature, pressure, humidity, co2, smell)
   }
 
   private val Tables = Seq(
     "temperature",
     "pressure",
     "humidity",
-    "co2"
+    "co2",
+    "smell"
   )
 }
 
@@ -263,11 +268,13 @@ object Reader {
       temperature: Map[String, Option[Summary]],
       pressure: Map[String, Option[Summary]],
       humidity: Map[String, Option[Summary]],
-      co2: Map[String, Option[Summary]]
+      co2: Map[String, Option[Summary]],
+      smell: Map[String, Option[Summary]]
   ) = StatOutput(
     temperature = temperature.view.mapValues(_.map(_.toResult(formatTemperature))).toMap,
     pressure = pressure.view.mapValues(_.map(_.toResult(formatPressure))).toMap,
     humidity = humidity.view.mapValues(_.map(_.toResult(formatHumidity))).toMap,
-    co2 = co2.view.mapValues(_.map(_.toResult(formatCo2))).toMap
+    co2 = co2.view.mapValues(_.map(_.toResult(formatCo2))).toMap,
+    smell = smell.view.mapValues(_.map(_.toResult(formatCo2))).toMap
   )
 }

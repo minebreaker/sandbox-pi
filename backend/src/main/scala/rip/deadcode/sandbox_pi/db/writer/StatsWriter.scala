@@ -12,7 +12,7 @@ import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
 
 @Singleton
-class StatsWriter @Inject()(jdbi: Jdbi) {
+class StatsWriter @Inject() (jdbi: Jdbi) {
 
   private val logger = LoggerFactory.getLogger(classOf[StatsWriter])
 

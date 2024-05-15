@@ -9,6 +9,7 @@ import rip.deadcode.sandbox_pi.http.handler.led.LedHandler
 import rip.deadcode.sandbox_pi.http.handler.log.LogHandler
 import rip.deadcode.sandbox_pi.http.handler.log_bme680.LogBme680Handler
 import rip.deadcode.sandbox_pi.http.handler.log_mhz19c.LogMhz19CHandler
+import rip.deadcode.sandbox_pi.http.handler.log_tgs8100.LogTgs8100Handler
 import rip.deadcode.sandbox_pi.http.handler.logger.LoggerHandler
 import rip.deadcode.sandbox_pi.http.handler.pi_temperature.PiTemperatureHandler
 import rip.deadcode.sandbox_pi.http.handler.room.ListRoomHandler
@@ -27,6 +28,7 @@ class Handlers @Inject() (
     logHandler: LogHandler,
     logBme680Handler: LogBme680Handler,
     logMhz19CHandler: LogMhz19CHandler,
+    logTgs8100Handler: LogTgs8100Handler,
     environmentHandler: EnvironmentHandler,
     historyHandler: HistoryHandler,
     statHandler: StatHandler,
@@ -47,6 +49,7 @@ class Handlers @Inject() (
     logHandler,
     logBme680Handler,
     logMhz19CHandler,
+    logTgs8100Handler,
     environmentHandler,
     historyHandler,
     statHandler,

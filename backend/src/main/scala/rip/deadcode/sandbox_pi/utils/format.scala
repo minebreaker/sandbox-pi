@@ -23,3 +23,7 @@ def formatHumidity(humidity: String | Double) = {
 def formatCo2(co2: String | Double | Int) = {
   String.format("%.0f ㏙", toDouble(co2))
 }
+
+def formatSmell(smell: String) = {
+  String.format("%.2f V", toDouble(smell) / 1_000_000)
+}

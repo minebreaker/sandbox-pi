@@ -105,15 +105,16 @@ export const Chart: FunctionComponent<ChartProps> = props => {
       const body = await response.json() // FIXME
 
       const charts = [
-        [body.temperature, "Temperature", "℃"],
-        [body.pressure, "Pressure", "㎩"],
-        [body.humidity, "Humidity", "％"],
-        [body.co2, "CO2", "㏙"]
-      ].map(([data, name, unit]) => {
+        [body.temperature, "Temperature", "℃", (n: number) => n],
+        [body.pressure, "Pressure", "㍱", (n: number) => n / 100],
+        [body.humidity, "Humidity", "％", (n: number) => n],
+        [body.co2, "CO2", "㏙", (n: number) => n],
+        [body.smell, "Smell", "V", (n: number) => n / 1_000_000]
+      ].map(([data, name, unit, convert]) => {
         const arr = Object.entries(data)
         return getChartOptions(
-          arr.map(([_, v]: any) => v?.medianRaw ?? null),
-          arr.map(([_, v]: any) => [v?.minRaw ?? null, v?.maxRaw ?? null]),
+          arr.map(([_, v]: any) => convert(v?.medianRaw) ?? null),
+          arr.map(([_, v]: any) => [convert(v?.minRaw) ?? null, convert(v?.maxRaw) ?? null]),
           name, unit
         )
       })
