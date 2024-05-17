@@ -11,6 +11,7 @@ import rip.deadcode.sandbox_pi.pi.bm680.{Bme680, Bme680Output}
 import rip.deadcode.sandbox_pi.pi.mhz19c.{Mhz19c, Mhz19cOutput}
 import rip.deadcode.sandbox_pi.service.Discord.DiscordException.ErrorResponse
 import rip.deadcode.sandbox_pi.service.Discord.{DiscordException, ExecuteRequest}
+import rip.deadcode.sandbox_pi.service.mac.MacWatcher
 import rip.deadcode.sandbox_pi.utils.{formatCo2, formatHumidity}
 import sttp.client3.SttpClientException
 import sttp.client3.httpclient.cats.HttpClientCatsBackend
@@ -19,9 +20,8 @@ import sttp.model.{StatusCode, Uri}
 import java.time.temporal.TemporalUnit
 import java.time.{Clock, Instant}
 
-// TODO separate the daemon runner from the discord service itself
 @Singleton
-class Discord @Inject() (bme680: Bme680, mhz19c: Mhz19c, clock: Clock, config: Config) {
+class Discord @Inject() (bme680: Bme680, mhz19c: Mhz19c, macWatcher: MacWatcher, clock: Clock, config: Config) {
 
   private val logger = LoggerFactory.getLogger(classOf[Discord])
 
@@ -36,13 +36,18 @@ class Discord @Inject() (bme680: Bme680, mhz19c: Mhz19c, clock: Clock, config: C
     maybeWebhookUrl match {
       case Some(value) =>
         for {
-          tph <- IO(bme680.getData)
-          co2 <- IO(mhz19c.getData)
-          _ <- sendNotification(value, tph, co2).recover {
-            case e: SttpClientException =>
-              logger.warn("Failed to send webhook: Sttp error", e)
-            case e: ErrorResponse =>
-              logger.warn(s"Failed to send webhook: Invalid response [code={}]", e.status)
+          isAtHome <- IO(macWatcher.isAtHome)
+          _ <- IO.whenA(isAtHome) {
+            for {
+              tph <- IO(bme680.getData)
+              co2 <- IO(mhz19c.getData)
+              _ <- sendNotification(value, tph, co2).recover {
+                case e: SttpClientException =>
+                  logger.warn("Failed to send webhook: Sttp error", e)
+                case e: ErrorResponse =>
+                  logger.warn(s"Failed to send webhook: Invalid response [code={}]", e.status)
+              }
+            } yield ()
           }
         } yield ()
       case None =>

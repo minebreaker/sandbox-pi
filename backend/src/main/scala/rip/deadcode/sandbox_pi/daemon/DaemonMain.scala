@@ -7,7 +7,9 @@ import com.google.inject.{Inject, Singleton}
 import org.slf4j.LoggerFactory
 import rip.deadcode.sandbox_pi.pi.bm680.Bme680
 import rip.deadcode.sandbox_pi.pi.mhz19c.Mhz19c
-import rip.deadcode.sandbox_pi.service.{Discord, PersistData}
+import rip.deadcode.sandbox_pi.service.mac.MacWatcher
+import rip.deadcode.sandbox_pi.service.Discord
+import rip.deadcode.sandbox_pi.service.discord.PersistData
 
 import java.time.{Clock, Instant}
 import java.util.concurrent.{ScheduledExecutorService, ScheduledThreadPoolExecutor, TimeUnit}
@@ -21,6 +23,7 @@ class DaemonMain @Inject() (
     mhz19c: Mhz19c,
     persistData: PersistData,
     discord: Discord,
+    macWatcher: MacWatcher,
     runner: PeriodicRunner
 ) {
 
@@ -31,7 +34,7 @@ class DaemonMain @Inject() (
 
   private val PoolSize = 1
   private val Timeout = 10.seconds.toJava
-  private val Period = 10.seconds.toJava
+  private val Period = 5.seconds.toJava
 
   private val executor: ScheduledExecutorService = MoreExecutors.getExitingScheduledExecutorService(
     new ScheduledThreadPoolExecutor(PoolSize),
@@ -65,6 +68,9 @@ class DaemonMain @Inject() (
           }
           every(30.minutes, "Discord notification") {
             discord.run()
+          }
+          every(10.seconds, "Arp check") {
+            macWatcher.run()
           }
         }
 

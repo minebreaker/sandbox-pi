@@ -1,4 +1,4 @@
-package rip.deadcode.sandbox_pi.service
+package rip.deadcode.sandbox_pi.service.discord
 
 import cats.effect.IO
 import com.google.inject.{Inject, Singleton}
@@ -9,7 +9,7 @@ import rip.deadcode.sandbox_pi.db.writer.StatsWriter
 import rip.deadcode.sandbox_pi.lib.time.timestampToTime
 import rip.deadcode.sandbox_pi.pi.bm680.Bme680Output
 import rip.deadcode.sandbox_pi.pi.mhz19c.Mhz19cOutput
-import rip.deadcode.sandbox_pi.service.PersistData.DefaultRoomId
+import rip.deadcode.sandbox_pi.service.discord.PersistData.DefaultRoomId
 import rip.deadcode.sandbox_pi.utils.{avg, med}
 
 import java.time.{Clock, Instant, ZonedDateTime}
